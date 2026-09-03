@@ -76,7 +76,7 @@ function isActive($condicao) {
             <i class="fas fa-door-open"></i>
         </div>
         <div class="logo-text">
-            Gerenciador<span>Salas</span>
+            Gerenciador<span> Salas </span>
             <small>Gerenciamento Acadêmico</small>
         </div>
     </div>
