@@ -1,0 +1,186 @@
+<?php
+// ============================================================
+// ARQUIVO: USUARIOS(ADM)/aprovar_usuario.php (MODIFICADO PARA MULTI-TENANT)
+// FUNÇÃO: Aprovar usuário (pendente → ativo)
+// ============================================================
+
+// ============================================================
+// 1. INICIAR SESSÃO E CARREGAR CONEXÃO
+// ============================================================
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/../conexao_banco.php';
+
+// ============================================================
+// 2. VERIFICAR LOGIN (NOVO SISTEMA)
+// ============================================================
+
+if (!isLoggedIn()) {
+    setMessage('error', 'Você precisa estar logado para acessar esta página.');
+    redirect('../AUTENTIFICACAO_ACESSO/realizar_login.php');
+}
+
+// ============================================================
+// 3. VERIFICAR PERMISSÃO (NOVO SISTEMA)
+// ============================================================
+
+$tipos_permitidos = ['admin_cliente', 'gerente'];
+if (!in_array($_SESSION['tipo_usuario'] ?? '', $tipos_permitidos)) {
+    setMessage('error', 'Acesso negado. Apenas administradores e coordenadores podem aprovar usuários.');
+    redirect('../AUTENTIFICACAO_ACESSO/dashboard.php');
+}
+
+// ============================================================
+// 4. VARIÁVEIS DO SISTEMA (NOVO)
+// ============================================================
+
+$id_cliente = getClienteId();
+$id_usuario_logado = getUsuarioId();
+$tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
+$id_unidade_usuario = $_SESSION['usuario_unidade'] ?? null;
+
+// Se não tiver unidade definida, buscar a primeira unidade do cliente
+if ($id_unidade_usuario == 0 || $id_unidade_usuario === null) {
+    try {
+        $stmt = $conn->prepare("SELECT id_unidade FROM unidades WHERE id_cliente = ? ORDER BY id_unidade LIMIT 1");
+        $stmt->execute([$id_cliente]);
+        $unidade = $stmt->fetch();
+        if ($unidade) {
+            $id_unidade_usuario = $unidade['id_unidade'];
+            $_SESSION['usuario_unidade'] = $id_unidade_usuario;
+        }
+    } catch (PDOException $e) {
+        $id_unidade_usuario = 0;
+    }
+}
+
+// ============================================================
+// 5. RECEBER ID DO USUÁRIO
+// ============================================================
+
+$id = (int)($_GET['id'] ?? 0);
+if ($id <= 0) {
+    setMessage('error', 'ID do usuário inválido.');
+    redirect('listar_usuarios.php');
+}
+
+// ============================================================
+// 6. BUSCAR DADOS DO USUÁRIO (FILTRADO POR CLIENTE)
+// ============================================================
+
+try {
+    $sql = "SELECT u.*, un.nome_unidade 
+            FROM usuarios_sistema u
+            LEFT JOIN unidades un ON u.id_unidade = un.id_unidade AND un.id_cliente = u.id_cliente
+            WHERE u.id_usuario = :id 
+            AND u.id_cliente = :id_cliente";
+    $stmt = $conn->prepare($sql);
+    $stmt->execute([
+        ':id' => $id,
+        ':id_cliente' => $id_cliente
+    ]);
+    $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$usuario) {
+        setMessage('error', 'Usuário não encontrado ou não pertence à sua organização.');
+        redirect('listar_usuarios.php');
+    }
+
+    // Verificar permissão: gerente só pode aprovar usuários da sua unidade
+    if ($tipo_usuario === 'gerente') {
+        if ($usuario['id_unidade'] != $id_unidade_usuario) {
+            setMessage('error', 'Você não tem permissão para aprovar este usuário.');
+            redirect('listar_usuarios.php');
+        }
+    }
+
+    // Verificar se já está ativo
+    if ($usuario['status_usuario'] === 'ativo') {
+        setMessage('warning', 'Este usuário já está ativo.');
+        redirect('listar_usuarios.php');
+    }
+
+    if ($usuario['status_usuario'] === 'bloqueado') {
+        setMessage('error', 'Usuários bloqueados não podem ser aprovados. Desbloqueie primeiro.');
+        redirect('listar_usuarios.php');
+    }
+
+} catch (PDOException $e) {
+    setMessage('error', 'Erro ao buscar usuário: ' . $e->getMessage());
+    redirect('listar_usuarios.php');
+}
+
+// ============================================================
+// 7. APROVAR USUÁRIO
+// ============================================================
+
+try {
+    $conn->beginTransaction();
+
+    $sqlUpdate = "UPDATE usuarios_sistema 
+                  SET status_usuario = 'ativo' 
+                  WHERE id_usuario = :id 
+                  AND id_cliente = :id_cliente";
+    $stmtUpdate = $conn->prepare($sqlUpdate);
+    $stmtUpdate->execute([
+        ':id' => $id,
+        ':id_cliente' => $id_cliente
+    ]);
+
+    // ============================================================
+    // 8. REGISTRAR NO HISTÓRICO DO SISTEMA
+    // ============================================================
+    try {
+        $sqlHistorico = "INSERT INTO historico_sistema (
+            id_funcionario,
+            tabela_afetada,
+            id_registro_afetado,
+            acao,
+            dados_novos,
+            ip_origem
+        ) VALUES (
+            :id_funcionario,
+            'usuarios_sistema',
+            :id_registro,
+            'UPDATE',
+            :dados,
+            :ip
+        )";
+        $stmtHistorico = $conn->prepare($sqlHistorico);
+        $stmtHistorico->execute([
+            ':id_funcionario' => $id_usuario_logado,
+            ':id_registro' => $id,
+            ':dados' => json_encode([
+                'usuario' => $usuario['nome_usuario'],
+                'email' => $usuario['email_usuario'],
+                'status_anterior' => $usuario['status_usuario'],
+                'status_novo' => 'ativo',
+                'acao' => 'Aprovação de usuário'
+            ]),
+            ':ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'
+        ]);
+    } catch (PDOException $e) {
+        // Não interrompe o processo se falhar o histórico
+        error_log('Erro ao registrar aprovação: ' . $e->getMessage());
+    }
+
+    $conn->commit();
+
+    setMessage('success', 'Usuário <strong>' . htmlspecialchars($usuario['nome_usuario']) . '</strong> aprovado com sucesso!');
+
+} catch (PDOException $e) {
+    if (isset($conn) && $conn->inTransaction()) {
+        $conn->rollBack();
+    }
+    setMessage('error', 'Erro ao aprovar usuário: ' . $e->getMessage());
+}
+
+// ============================================================
+// 9. REDIRECIONAR PARA A LISTAGEM
+// ============================================================
+
+redirect('listar_usuarios.php');
+exit;
