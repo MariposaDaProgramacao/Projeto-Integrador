@@ -1,13 +1,18 @@
 <?php
 // ============================================================
-// AUTENTIFICACAO_ACESSO/realizar_login.php (MODIFICADO PARA MULTI-TENANT)
+// AUTENTIFICACAO_ACESSO/realizar_login.php (VERSÃO CORRIGIDA)
 // ============================================================
 
+// ============================================================
+// 1. CARREGAR A CONEXÃO
+// ============================================================
 require_once __DIR__ . '/../conexao_banco.php';
 
-// Se já estiver logado, redireciona para o dashboard
+// ============================================================
+// 2. SE JÁ ESTIVER LOGADO, REDIRECIONAR
+// ============================================================
 if (isLoggedIn()) {
-    redirect('dashboard.php');
+    redirect('../AUTENTIFICACAO_ACESSO/dashboard.php');
 }
 
 $erro = '';
@@ -20,9 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $erro = 'Preencha todos os campos.';
     } else {
         try {
-            // ============================================================
-            // 1. BUSCAR USUÁRIO NA NOVA TABELA usuarios_sistema
-            // ============================================================
+            // Buscar usuário na nova tabela
             $sql = "SELECT 
                         u.id_usuario,
                         u.nome_usuario,
@@ -47,40 +50,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([':email' => $email]);
             $usuario = $stmt->fetch();
             
-            // ============================================================
-            // 2. VALIDAÇÕES DO USUÁRIO
-            // ============================================================
-            
             if (!$usuario) {
                 $erro = 'E-mail ou senha inválidos.';
-            } 
-            // Verificar se a senha está correta
-            elseif (!password_verify($senha, $usuario['senha_usuario'])) {
-                // Incrementar tentativas de login
+            } elseif (!password_verify($senha, $usuario['senha_usuario'])) {
+                // Incrementar tentativas
                 $sql = "UPDATE usuarios_sistema SET tentativas_login = tentativas_login + 1 WHERE id_usuario = :id";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute([':id' => $usuario['id_usuario']]);
                 $erro = 'E-mail ou senha inválidos.';
-            } 
-            // Verificar status do usuário
-            elseif ($usuario['status_usuario'] === 'inativo') {
-                $erro = 'Seu cadastro está pendente de aprovação. Aguarde o administrador ativar sua conta.';
-            } 
-            elseif ($usuario['status_usuario'] === 'bloqueado') {
-                $erro = 'Seu acesso foi bloqueado. Entre em contato com o administrador do sistema.';
-            } 
-            // Verificar status do cliente (organização)
-            elseif ($usuario['status_cliente'] === 'inativo') {
+            } elseif ($usuario['status_usuario'] === 'inativo') {
+                $erro = 'Seu cadastro está pendente de aprovação.';
+            } elseif ($usuario['status_usuario'] === 'bloqueado') {
+                $erro = 'Seu acesso foi bloqueado. Entre em contato com o administrador.';
+            } elseif ($usuario['status_cliente'] === 'inativo' || $usuario['status_cliente'] === 'bloqueado') {
                 $erro = 'Sua organização está inativa. Entre em contato com o suporte.';
-            } 
-            elseif ($usuario['status_cliente'] === 'bloqueado') {
-                $erro = 'Sua organização foi bloqueada. Entre em contato com o suporte.';
-            } 
-            // ============================================================
-            // 3. LOGIN REALIZADO COM SUCESSO
-            // ============================================================
-            else {
-                // Resetar tentativas de login
+            } else {
+                // Resetar tentativas
                 $sql = "UPDATE usuarios_sistema SET tentativas_login = 0 WHERE id_usuario = :id";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute([':id' => $usuario['id_usuario']]);
@@ -91,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([':id' => $usuario['id_usuario']]);
                 
                 // ============================================================
-                // 4. CRIAR SESSÃO COM DADOS DO USUÁRIO
+                // CRIAR SESSÃO - VERIFIQUE ESTA PARTE!
                 // ============================================================
                 $_SESSION['id_usuario'] = $usuario['id_usuario'];
                 $_SESSION['id_cliente'] = $usuario['id_cliente'];
@@ -99,9 +84,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['email_usuario'] = $usuario['email_usuario'];
                 $_SESSION['tipo_usuario'] = $usuario['tipo_usuario'];
                 $_SESSION['status_usuario'] = $usuario['status_usuario'];
-                $_SESSION['telefone_usuario'] = $usuario['telefone_usuario'];
-                
-                // Dados do cliente
                 $_SESSION['nome_cliente'] = $usuario['nome_cliente'];
                 $_SESSION['status_cliente'] = $usuario['status_cliente'];
                 $_SESSION['plano_cliente'] = $usuario['plano_cliente'];
@@ -109,46 +91,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['limite_usuarios'] = $usuario['limite_usuarios'];
                 
                 // ============================================================
-                // 5. REGISTRAR NO HISTÓRICO DO SISTEMA
+                // REDIRECIONAR - VERIFIQUE ESTA PARTE!
                 // ============================================================
-                try {
-                    $sql_historico = "INSERT INTO historico_sistema 
-                                    (id_funcionario, tabela_afetada, id_registro_afetado, acao, dados_novos, ip_origem) 
-                                    VALUES 
-                                    (:id_funcionario, 'usuarios_sistema', :id_registro, 'login', :dados, :ip)";
-                    $stmt_historico = $conn->prepare($sql_historico);
-                    $stmt_historico->execute([
-                        ':id_funcionario' => $usuario['id_usuario'],
-                        ':id_registro' => $usuario['id_usuario'],
-                        ':dados' => json_encode([
-                            'usuario' => $usuario['nome_usuario'],
-                            'email' => $usuario['email_usuario'],
-                            'cliente' => $usuario['nome_cliente']
-                        ]),
-                        ':ip' => $_SERVER['REMOTE_ADDR'] ?? null
-                    ]);
-                } catch (PDOException $e) {
-                    // Não interrompe o login se falhar ao registrar histórico
-                    error_log('Erro ao registrar histórico: ' . $e->getMessage());
-                }
-                
-                // ============================================================
-                // 6. REDIRECIONAR PARA O DASHBOARD
-                // ============================================================
-                setMessage('success', 'Bem-vindo(a) ' . $usuario['nome_usuario'] . '!');
+                // Usar redirecionamento absoluto para garantir
                 header('Location: dashboard.php');
                 exit;
             }
         } catch (PDOException $e) {
-            $erro = 'Erro ao realizar login. Tente novamente mais tarde.';
+            $erro = 'Erro ao realizar login: ' . $e->getMessage();
             error_log('Erro no login: ' . $e->getMessage());
         }
     }
 }
 
-// ============================================================
-// MENSAGENS DE RETORNO
-// ============================================================
+// Mensagem da sessão
 $message = getMessage();
 ?>
 <!DOCTYPE html>
@@ -158,26 +114,23 @@ $message = getMessage();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Gerenciador de Salas</title>
     
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet"/>
     
     <style>
-        /* Reset básico para o body */
+        /* Reset básico */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            margin: 0;
-            padding: 0;
             font-family: 'Inter', sans-serif;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             background: #f0f4fb;
+            padding: 20px;
             overflow: hidden;
         }
 
-        /* Imagem de fundo */
         .bg-image {
             position: fixed;
             top: 0;
@@ -194,23 +147,13 @@ $message = getMessage();
             display: block;
         }
 
-        /* Overlay escuro e centralização */
         .login-wrapper {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            position: relative;
             z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.35);
-            padding: 20px;
-            box-sizing: border-box;
+            width: 100%;
+            max-width: 420px;
         }
 
-        /* Card de login */
         .login-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(6px);
@@ -218,14 +161,10 @@ $message = getMessage();
             padding: 40px 36px;
             border-radius: 24px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 420px;
             border: 1px solid rgba(255, 255, 255, 0.6);
             transition: transform 0.2s ease;
         }
-        .login-card:hover {
-            transform: translateY(-2px);
-        }
+        .login-card:hover { transform: translateY(-2px); }
 
         .login-card .login-icon {
             font-size: 48px;
@@ -237,8 +176,8 @@ $message = getMessage();
             font-size: 26px;
             font-weight: 700;
             color: #0e1a2b;
-            margin: 6px 0 2px;
             text-align: center;
+            margin: 6px 0 2px;
         }
         .login-card .subtitle {
             text-align: center;
@@ -247,7 +186,6 @@ $message = getMessage();
             margin-bottom: 24px;
         }
 
-        /* Campos do formulário */
         .login-card .form-group {
             margin-bottom: 18px;
         }
@@ -279,11 +217,8 @@ $message = getMessage();
             border-color: #1a73e8;
             box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.1);
         }
-        .login-card .form-group input::placeholder {
-            color: #9aabbf;
-        }
+        .login-card .form-group input::placeholder { color: #9aabbf; }
 
-        /* Botão */
         .login-card .btn {
             width: 100%;
             justify-content: center;
@@ -309,7 +244,6 @@ $message = getMessage();
             transform: scale(1.02);
         }
 
-        /* Alertas */
         .login-card .alert {
             padding: 12px 16px;
             border-radius: 12px;
@@ -330,20 +264,15 @@ $message = getMessage();
             color: #1e8546;
             border: 1px solid #c8f0cf;
         }
-        .login-card .alert i {
-            font-size: 18px;
-        }
+        .login-card .alert i { font-size: 18px; }
 
-        /* Rodapé */
         .login-card .footer-text {
             text-align: center;
             margin-top: 20px;
             font-size: 12px;
             color: #8a9bb5;
         }
-        .login-card .footer-text i {
-            margin-right: 4px;
-        }
+        .login-card .footer-text i { margin-right: 4px; }
 
         .login-card .register-link {
             text-align: center;
@@ -356,43 +285,29 @@ $message = getMessage();
             text-decoration: none;
             font-weight: 600;
         }
-        .login-card .register-link a:hover {
-            text-decoration: underline;
-        }
+        .login-card .register-link a:hover { text-decoration: underline; }
 
-        /* Responsividade */
         @media (max-width: 480px) {
-            .login-card {
-                padding: 28px 20px;
-            }
-            .login-card h2 {
-                font-size: 22px;
-            }
-            .login-card .btn {
-                font-size: 14px;
-                padding: 10px;
-            }
+            .login-card { padding: 28px 20px; }
+            .login-card h2 { font-size: 22px; }
+            .login-card .btn { font-size: 14px; padding: 10px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Imagem de fundo -->
     <div class="bg-image">
         <img src="../IMAGENS/Predio.png" alt="Fundo do sistema">
     </div>
 
-    <!-- Wrapper centralizador -->
     <div class="login-wrapper">
         <div class="login-card">
-            <!-- Ícone -->
             <div class="login-icon">
                 <i class="fas fa-door-open"></i>
             </div>
             <h2>Gerenciador de Salas</h2>
             <p class="subtitle">Gerenciamento de Ambientes</p>
 
-            <!-- Mensagens de erro -->
             <?php if ($erro): ?>
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-circle"></i>
@@ -400,7 +315,6 @@ $message = getMessage();
                 </div>
             <?php endif; ?>
             
-            <!-- Mensagens de sucesso (ex: cadastro realizado) -->
             <?php if ($message && $message['tipo'] === 'success'): ?>
                 <div class="alert alert-success">
                     <i class="fas fa-check-circle"></i>
@@ -408,7 +322,6 @@ $message = getMessage();
                 </div>
             <?php endif; ?>
 
-            <!-- Formulário -->
             <form method="POST" action="">
                 <div class="form-group">
                     <label for="email"><i class="fas fa-envelope"></i> E-mail</label>
@@ -429,18 +342,29 @@ $message = getMessage();
                 </button>
             </form>
 
-            <!-- Link para cadastro -->
             <div class="register-link">
                 Não tem uma conta? <a href="cadastro.php">Cadastre-se gratuitamente</a>
             </div>
 
-            <!-- Rodapé -->
             <div class="footer-text">
                 <i class="fas fa-shield-alt"></i> 
                 Sistema protegido. Apenas usuários autorizados.
             </div>
         </div>
     </div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT DE DEBUG - REMOVA DEPOIS QUE FUNCIONAR              -->
+    <!-- ============================================================ -->
+    <?php if (isset($_SESSION['id_usuario']) && isset($_SESSION['id_cliente'])): ?>
+    <script>
+        console.log('Usuário logado!');
+        console.log('ID Usuário: <?php echo $_SESSION['id_usuario']; ?>');
+        console.log('ID Cliente: <?php echo $_SESSION['id_cliente']; ?>');
+        console.log('Nome: <?php echo $_SESSION['nome_usuario']; ?>');
+        console.log('Tipo: <?php echo $_SESSION['tipo_usuario']; ?>');
+    </script>
+    <?php endif; ?>
 
 </body>
 </html>
