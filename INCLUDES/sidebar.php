@@ -1,7 +1,7 @@
 <?php
 // ============================================================
-// ARQUIVO: INCLUDES/sidebar.php (MODIFICADO PARA MULTI-TENANT)
-// FUNÇÃO: Sidebar padrão do sistema com botão de logout
+// ARQUIVO: INCLUDES/sidebar.php
+// FUNÇÃO: Sidebar padrão do sistema
 // ============================================================
 
 // ============================================================
@@ -12,14 +12,14 @@ if (!function_exists('isLoggedIn')) {
 }
 
 // ============================================================
-// VERIFICAR SE O USUÁRIO ESTÁ LOGADO (NOVO SISTEMA)
+// VERIFICAR SE O USUÁRIO ESTÁ LOGADO
 // ============================================================
-if (!isLoggedIn()) {
+if (!isset($_SESSION['id_usuario']) || !isset($_SESSION['id_cliente'])) {
     return;
 }
 
 // ============================================================
-// VARIÁVEIS DO USUÁRIO (NOVO SISTEMA)
+// VARIÁVEIS DO USUÁRIO
 // ============================================================
 $usuario_nome = $_SESSION['nome_usuario'] ?? 'Usuário';
 $usuario_tipo = $_SESSION['tipo_usuario'] ?? 'usuario';
@@ -45,46 +45,27 @@ foreach ($partes as $parte) {
 $iniciais = $iniciais ?: 'U';
 
 // ============================================================
-// PERMISSÕES (NOVO SISTEMA)
+// PERMISSÕES
 // ============================================================
 $is_admin = ($usuario_tipo === 'admin_cliente');
 $is_gerente = ($usuario_tipo === 'gerente');
-$is_usuario = ($usuario_tipo === 'usuario' || $usuario_tipo === 'visualizador');
 $pode_gerenciar = ($is_admin || $is_gerente);
 
 // ============================================================
-// DETECTAR PÁGINA ATUAL PARA DESTAQUE DO MENU
+// DETECTAR PÁGINA ATUAL
 // ============================================================
 $pagina_atual = basename($_SERVER['PHP_SELF']);
 $caminho_atual = $_SERVER['PHP_SELF'];
-
-// Verificar se está na página de Mapa de Ocupação
-$is_mapa_ocupacao = (strpos($caminho_atual, 'listar_aulas_dia.php') !== false || strpos($caminho_atual, 'mapa_salas_dia.php') !== false);
-
-// Verificar se está na página de Cronograma (listar_aulas.php)
-$is_cronograma = (strpos($caminho_atual, 'listar_aulas.php') !== false);
-
-// Verificar se está na página de Registrar Recesso
-$is_recesso = (strpos($caminho_atual, 'listar_recesso.php') !== false);
-
-// Verificar se está na página de Dashboard
 $is_dashboard = ($pagina_atual == 'dashboard.php');
-
-// Verificar se está na página de Usuários
 $is_usuarios = (strpos($caminho_atual, 'USUARIOS(ADM)') !== false);
-
-// Verificar se está na página de Unidades
 $is_unidades = (strpos($caminho_atual, 'UNIDADES') !== false);
-
-// Verificar se está na página de Cursos
 $is_cursos = (strpos($caminho_atual, 'CURSOS') !== false);
-
-// Verificar se está na página de Salas
 $is_salas = (strpos($caminho_atual, 'SALAS') !== false);
+$is_cronograma = (strpos($caminho_atual, 'CRONOGRAMA_AULAS') !== false);
+$is_mapa = (strpos($caminho_atual, 'MAPA') !== false);
+$is_recessos = (strpos($caminho_atual, 'RECESSOS') !== false);
+$is_resetar_senha = (strpos($caminho_atual, 'resetar_senha') !== false);
 
-// ============================================================
-// FUNÇÃO PARA VERIFICAR SE PÁGINA ESTÁ ATIVA
-// ============================================================
 function isActive($condicao) {
     return $condicao ? 'active' : '';
 }
@@ -104,14 +85,14 @@ function isActive($condicao) {
         <div class="menu-label">Navegação</div>
         
         <!-- Dashboard -->
-        <a href="../AUTENTIFICACAO_ACESSO/dashboard.php" class="menu-item <?php echo $is_dashboard ? 'active' : ''; ?>">
+        <a href="../AUTENTIFICACAO_ACESSO/dashboard.php" class="menu-item-link <?php echo $is_dashboard ? 'active' : ''; ?>">
             <i class="fas fa-chart-pie"></i>
             <span>Dashboard</span>
         </a>
         
         <!-- USUÁRIOS (apenas admin) -->
         <?php if ($is_admin): ?>
-            <a href="../USUARIOS(ADM)/listar_usuarios.php" class="menu-item <?php echo $is_usuarios ? 'active' : ''; ?>">
+            <a href="../USUARIOS(ADM)/listar_usuarios.php" class="menu-item-link <?php echo $is_usuarios ? 'active' : ''; ?>">
                 <i class="fas fa-users"></i>
                 <span>Usuários</span>
             </a>
@@ -119,7 +100,7 @@ function isActive($condicao) {
         
         <!-- Unidades (admin e gerente) -->
         <?php if ($pode_gerenciar): ?>
-            <a href="../UNIDADES/listar_unidade.php" class="menu-item <?php echo $is_unidades ? 'active' : ''; ?>">
+            <a href="../UNIDADES/listar_unidade.php" class="menu-item-link <?php echo $is_unidades ? 'active' : ''; ?>">
                 <i class="fas fa-building"></i>
                 <span>Unidades</span>
             </a>
@@ -127,33 +108,26 @@ function isActive($condicao) {
         
         <!-- Cursos (admin e gerente) -->
         <?php if ($pode_gerenciar): ?>
-            <a href="../CURSOS/listar_cursos.php" class="menu-item <?php echo $is_cursos ? 'active' : ''; ?>">
+            <a href="../CURSOS/listar_cursos.php" class="menu-item-link <?php echo $is_cursos ? 'active' : ''; ?>">
                 <i class="fas fa-graduation-cap"></i>
                 <span>Cursos</span>
             </a>
         <?php endif; ?>
         
         <!-- Salas (todos os tipos) -->
-        <a href="../SALAS/listar_salas.php" class="menu-item <?php echo ($is_salas && strpos($caminho_atual, 'listar_salas.php') !== false) ? 'active' : ''; ?>">
+        <a href="../SALAS/listar_salas.php" class="menu-item-link <?php echo $is_salas ? 'active' : ''; ?>">
             <i class="fas fa-door-open"></i>
             <span>Salas</span>
         </a>
         
-        <!-- Cronograma - NÃO fica ativo quando estiver no Mapa de Ocupação -->
-        <?php if (!$is_mapa_ocupacao): ?>
-            <a href="../CRONOGRAMA_AULAS/listar_aulas.php" class="menu-item <?php echo $is_cronograma ? 'active' : ''; ?>">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Cronograma</span>
-            </a>
-        <?php else: ?>
-            <a href="../CRONOGRAMA_AULAS/listar_aulas.php" class="menu-item">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Cronograma</span>
-            </a>
-        <?php endif; ?>
+        <!-- Cronograma -->
+        <a href="../CRONOGRAMA_AULAS/listar_aulas.php" class="menu-item-link <?php echo $is_cronograma ? 'active' : ''; ?>">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Cronograma</span>
+        </a>
         
-        <!-- Mapa de Ocupação (todos os tipos) -->
-        <a href="../MAPA/mapa_salas_dia.php" class="menu-item <?php echo $is_mapa_ocupacao ? 'active' : ''; ?>">
+        <!-- Mapa de Ocupação -->
+        <a href="../MAPA/mapa_salas_dia.php" class="menu-item-link <?php echo $is_mapa ? 'active' : ''; ?>">
             <i class="fas fa-map"></i>
             <span>Mapa de Ocupação</span>
             <span class="badge-menu">novo</span>
@@ -161,7 +135,7 @@ function isActive($condicao) {
 
         <!-- RECESSOS (admin e gerente) -->
         <?php if ($pode_gerenciar): ?>
-            <a href="../RECESSOS/listar_recesso.php" class="menu-item <?php echo $is_recesso ? 'active' : ''; ?>">
+            <a href="../RECESSOS/listar_recesso.php" class="menu-item-link <?php echo $is_recessos ? 'active' : ''; ?>">
                 <i class="fas fa-calendar-minus"></i>
                 <span>Registrar Recesso</span>
             </a>
@@ -170,7 +144,7 @@ function isActive($condicao) {
         <div class="menu-label">Configurações</div>
         
         <!-- Alterar Senha -->
-        <a href="../AUTENTIFICACAO_ACESSO/resetar_senha.php" class="menu-item <?php echo strpos($caminho_atual, 'resetar_senha') !== false ? 'active' : ''; ?>">
+        <a href="../AUTENTIFICACAO_ACESSO/resetar_senha.php" class="menu-item-link <?php echo $is_resetar_senha ? 'active' : ''; ?>">
             <i class="fas fa-key"></i>
             <span>Alterar Senha</span>
         </a>
@@ -188,7 +162,7 @@ function isActive($condicao) {
                 <div class="role"><?php echo htmlspecialchars($usuario_cargo_exibicao); ?></div>
                 <?php if (!empty($nome_cliente)): ?>
                     <div class="cliente">
-                        <i class="fas fa-building" style="font-size: 10px;"></i>
+                        <i class="fas fa-building"></i>
                         <?php echo htmlspecialchars($nome_cliente); ?>
                     </div>
                 <?php endif; ?>
