@@ -198,33 +198,7 @@ function manterFiltros($pagina = null) {
 }
 
 // ============================================================
-// 10. FUNÇÃO PARA MAPEAR TIPO DE USUÁRIO PARA BADGE
-// ============================================================
-
-function getBadgeClass($tipo) {
-    $map = [
-        'admin_cliente' => 'badge-danger',
-        'gerente' => 'badge-orange',
-        'usuario' => 'badge-purple',
-        'secretaria' => 'badge-info',
-        'portaria' => 'badge-info'
-    ];
-    return $map[$tipo] ?? 'badge-info';
-}
-
-function getTipoLabel($tipo) {
-    $map = [
-        'admin_cliente' => 'Administrador',
-        'gerente' => 'Coordenador',
-        'usuario' => 'Professor',
-        'secretaria' => 'Secretaria',
-        'portaria' => 'Portaria'
-    ];
-    return $map[$tipo] ?? ucfirst($tipo);
-}
-
-// ============================================================
-// 11. TÍTULO DA PÁGINA
+// 10. TÍTULO DA PÁGINA
 // ============================================================
 
 $titulo = 'Listar Usuários - Gerenciamento de Ambientes';
