@@ -1,7 +1,7 @@
 <?php
 // ============================================================
-// ARQUIVO: USUARIOS(ADM)/redefinir_senha_usuario.php (MODIFICADO PARA MULTI-TENANT)
-// FUNÇÃO: Redefinir senha do usuário
+// ARQUIVO: USUARIOS(ADM)/redefinir_senha_usuario.php
+// FUNÇÃO: Redefinir senha do profissional (funcionarios)
 // ============================================================
 
 // ============================================================
@@ -15,7 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../conexao_banco.php';
 
 // ============================================================
-// 2. VERIFICAR LOGIN (NOVO SISTEMA)
+// 2. VERIFICAR LOGIN
 // ============================================================
 
 if (!isLoggedIn()) {
@@ -24,7 +24,7 @@ if (!isLoggedIn()) {
 }
 
 // ============================================================
-// 3. VERIFICAR PERMISSÃO (NOVO SISTEMA)
+// 3. VERIFICAR PERMISSÃO
 // ============================================================
 
 $tipos_permitidos = ['admin_cliente'];
@@ -34,7 +34,7 @@ if (!in_array($_SESSION['tipo_usuario'] ?? '', $tipos_permitidos)) {
 }
 
 // ============================================================
-// 4. VARIÁVEIS DO SISTEMA (NOVO)
+// 4. VARIÁVEIS DO SISTEMA
 // ============================================================
 
 $id_cliente = getClienteId();
@@ -42,7 +42,7 @@ $id_usuario_logado = getUsuarioId();
 $tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
 
 // ============================================================
-// 5. VALIDAR ID DO USUÁRIO
+// 5. VALIDAR ID DO FUNCIONÁRIO
 // ============================================================
 
 $id = (int)($_GET['id'] ?? 0);
@@ -52,19 +52,20 @@ if ($id <= 0) {
 }
 
 // ============================================================
-// 6. BUSCAR DADOS DO USUÁRIO (COM VALIDAÇÃO DE CLIENTE)
+// 6. BUSCAR DADOS DO FUNCIONÁRIO (COM VALIDAÇÃO DE CLIENTE)
 // ============================================================
 
 $usuario = null;
 $erro = '';
 
 try {
+    // ✅ USANDO TABELA funcionarios
     $stmt = $conn->prepare("
-        SELECT u.id_usuario, u.nome_usuario, u.email_usuario, u.tipo_usuario
-        FROM usuarios_sistema u
-        WHERE u.id_usuario = :id
-        AND u.id_cliente = :id_cliente
-        AND u.tipo_usuario != 'admin_cliente'
+        SELECT f.id_funcionario, f.nome_funcionario, f.email_funcionario, f.cargo_funcionario
+        FROM funcionarios f
+        WHERE f.id_funcionario = :id
+        AND f.id_cliente = :id_cliente
+        AND f.cargo_funcionario != 'administrador'
     ");
     $stmt->execute([
         ':id' => $id,
@@ -73,36 +74,33 @@ try {
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$usuario) {
-        setMessage('error', 'Usuário não encontrado ou não pertence à sua organização.');
+        setMessage('error', 'Profissional não encontrado ou não pertence à sua organização.');
         redirect('listar_usuarios.php');
     }
     
-    // Verificar se o usuário é admin_cliente (não pode redefinir senha de outro admin)
-    if ($usuario['tipo_usuario'] === 'admin_cliente') {
+    // Verificar se o usuário é administrador (não pode redefinir senha de outro admin)
+    if ($usuario['cargo_funcionario'] === 'administrador') {
         setMessage('error', 'Não é possível redefinir a senha de outro administrador.');
         redirect('listar_usuarios.php');
     }
     
+    // Verificar se o profissional está ativo
+    $stmtStatus = $conn->prepare("SELECT status_acesso FROM funcionarios WHERE id_funcionario = :id AND id_cliente = :id_cliente");
+    $stmtStatus->execute([':id' => $id, ':id_cliente' => $id_cliente]);
+    $status = $stmtStatus->fetchColumn();
+    
+    if ($status === 'inativo') {
+        setMessage('error', 'Não é possível redefinir a senha de um profissional inativo. Ative-o primeiro.');
+        redirect('listar_usuarios.php');
+    }
+    
 } catch (PDOException $e) {
-    setMessage('error', 'Erro ao buscar usuário: ' . $e->getMessage());
+    setMessage('error', 'Erro ao buscar profissional: ' . $e->getMessage());
     redirect('listar_usuarios.php');
 }
 
 // ============================================================
-// 7. FUNÇÃO PARA GERAR SENHA PROVISÓRIA
-// ============================================================
-
-function gerarSenhaProvisoria($tamanho = 8) {
-    $caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    $senha = '';
-    for ($i = 0; $i < $tamanho; $i++) {
-        $senha .= $caracteres[random_int(0, strlen($caracteres) - 1)];
-    }
-    return $senha;
-}
-
-// ============================================================
-// 8. PROCESSAR REDEFINIÇÃO DE SENHA (POST)
+// 7. PROCESSAR REDEFINIÇÃO DE SENHA (POST)
 // ============================================================
 
 $novaSenha = '';
@@ -115,8 +113,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar'])) {
     try {
         $conn->beginTransaction();
 
-        // Atualizar senha
-        $sqlUpdate = "UPDATE usuarios_sistema SET senha_usuario = :senha WHERE id_usuario = :id AND id_cliente = :id_cliente";
+        // ✅ Atualizar senha na tabela funcionarios
+        $sqlUpdate = "UPDATE funcionarios SET senha_funcionario = :senha WHERE id_funcionario = :id AND id_cliente = :id_cliente";
         $stmtUpdate = $conn->prepare($sqlUpdate);
         $stmtUpdate->execute([
             ':senha' => $senhaHash,
@@ -135,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar'])) {
                 ip_origem
             ) VALUES (
                 :id_admin,
-                'usuarios_sistema',
+                'funcionarios',
                 :id_user,
                 'UPDATE',
                 :dados,
@@ -147,8 +145,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar'])) {
                 ':id_user' => $id,
                 ':dados' => json_encode([
                     'acao' => 'Redefinição de senha',
-                    'usuario' => $usuario['nome_usuario'],
-                    'email' => $usuario['email_usuario']
+                    'profissional' => $usuario['nome_funcionario'],
+                    'email' => $usuario['email_funcionario']
                 ]),
                 ':ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'
             ]);
@@ -168,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirmar'])) {
 }
 
 // ============================================================
-// 9. MENSAGENS DA SESSÃO
+// 8. MENSAGENS DA SESSÃO
 // ============================================================
 
 $mensagem_erro = '';
@@ -192,7 +190,7 @@ if (!empty($sucesso)) {
 }
 
 // ============================================================
-// 10. TÍTULO DA PÁGINA
+// 9. TÍTULO DA PÁGINA
 // ============================================================
 
 $titulo = 'Redefinir Senha - Gerenciamento de Ambientes';
@@ -200,11 +198,14 @@ $titulo = 'Redefinir Senha - Gerenciamento de Ambientes';
 <?php include_once __DIR__ . '/../INCLUDES/head.php'; ?>
 <?php include_once __DIR__ . '/../INCLUDES/sidebar.php'; ?>
 
+<!-- CSS ESPECÍFICO PARA O MÓDULO DE ADMINISTRAÇÃO -->
+<link rel="stylesheet" href="usuarios_adm.css">
+
 <main class="main">
     <header class="page-header">
         <div>
             <h1 class="page-title"><i class="fas fa-key"></i> Redefinir Senha</h1>
-            <p class="page-subtitle">Gerar nova senha provisória para <?php echo htmlspecialchars($usuario['nome_usuario']); ?></p>
+            <p class="page-subtitle">Gerar nova senha provisória para <?php echo htmlspecialchars($usuario['nome_funcionario']); ?></p>
         </div>
         <div style="font-size: 13px; color: #7a8aa0;">
             <i class="fas fa-building"></i> <?php echo htmlspecialchars($_SESSION['nome_cliente'] ?? ''); ?>
@@ -231,7 +232,7 @@ $titulo = 'Redefinir Senha - Gerenciamento de Ambientes';
                 </div>
                 <p style="margin-top: 10px; margin-bottom: 0; color: #5a6a7e; font-size: 14px;">
                     <i class="fas fa-info-circle" style="color: #ff9800;"></i> 
-                    Entregue esta senha ao usuário. Ele deve alterá-la no primeiro acesso.
+                    Entregue esta senha ao profissional. Ele deve alterá-la no primeiro acesso.
                 </p>
                 
                 <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px;">
@@ -244,8 +245,8 @@ $titulo = 'Redefinir Senha - Gerenciamento de Ambientes';
             <script>
                 function copiarSenha() {
                     const texto = 
-                        'Usuário: <?php echo htmlspecialchars($usuario['nome_usuario']); ?>\n' +
-                        'E-mail: <?php echo htmlspecialchars($usuario['email_usuario']); ?>\n' +
+                        'Profissional: <?php echo htmlspecialchars($usuario['nome_funcionario']); ?>\n' +
+                        'E-mail: <?php echo htmlspecialchars($usuario['email_funcionario']); ?>\n' +
                         'Nova senha provisória: <?php echo $novaSenha; ?>\n\n' +
                         'Instruções:\n' +
                         '1. Acesse o sistema com seu e-mail e esta senha.\n' +
@@ -276,7 +277,7 @@ $titulo = 'Redefinir Senha - Gerenciamento de Ambientes';
             <div style="background: #fff3cd; border-left: 6px solid #ffc107; padding: 16px 20px; border-radius: 8px; margin-bottom: 20px;">
                 <i class="fas fa-exclamation-triangle" style="color: #856404; margin-right: 10px;"></i>
                 <strong style="color: #856404;">Atenção:</strong>
-                <span style="color: #856404;">Ao redefinir a senha, o usuário perderá o acesso à senha atual e precisará usar a nova senha provisória que será gerada.</span>
+                <span style="color: #856404;">Ao redefinir a senha, o profissional perderá o acesso à senha atual e precisará usar a nova senha provisória que será gerada.</span>
             </div>
 
             <form method="POST" action="">
@@ -284,12 +285,12 @@ $titulo = 'Redefinir Senha - Gerenciamento de Ambientes';
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                     <div>
-                        <label style="font-weight: 600; font-size: 14px; color: #5a6a7e;">Usuário</label>
-                        <p style="padding: 8px 0; font-size: 15px;"><strong><?php echo htmlspecialchars($usuario['nome_usuario']); ?></strong></p>
+                        <label style="font-weight: 600; font-size: 14px; color: #5a6a7e;">Profissional</label>
+                        <p style="padding: 8px 0; font-size: 15px;"><strong><?php echo htmlspecialchars($usuario['nome_funcionario']); ?></strong></p>
                     </div>
                     <div>
                         <label style="font-weight: 600; font-size: 14px; color: #5a6a7e;">E-mail</label>
-                        <p style="padding: 8px 0; font-size: 15px;"><?php echo htmlspecialchars($usuario['email_usuario']); ?></p>
+                        <p style="padding: 8px 0; font-size: 15px;"><?php echo htmlspecialchars($usuario['email_funcionario']); ?></p>
                     </div>
                 </div>
                 
@@ -301,7 +302,7 @@ $titulo = 'Redefinir Senha - Gerenciamento de Ambientes';
                 </div>
                 
                 <div class="form-actions" style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
-                    <button type="submit" class="btn btn-warning" onclick="return confirm('Tem certeza que deseja redefinir a senha de <?php echo htmlspecialchars($usuario['nome_usuario']); ?>?')">
+                    <button type="submit" class="btn btn-warning" onclick="return confirm('Tem certeza que deseja redefinir a senha de <?php echo htmlspecialchars($usuario['nome_funcionario']); ?>?')">
                         <i class="fas fa-sync-alt"></i> Gerar Nova Senha
                     </button>
                     <a href="editar_usuario.php?id=<?php echo $id; ?>" class="btn btn-outline">Cancelar</a>

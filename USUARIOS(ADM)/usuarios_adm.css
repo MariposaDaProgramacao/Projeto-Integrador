@@ -1,0 +1,400 @@
+/* ======================================================
+   ARQUIVO: USUARIOS(ADM)/usuarios_adm.css
+   FUNÇÃO: Estilos específicos para o módulo de administração
+   ====================================================== */
+
+/* ======================================================
+   TABELA DE LISTAGEM
+   ====================================================== */
+
+.table-wrapper {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid #eef2f8 !important;
+    overflow: hidden !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+
+.table-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 18px 22px !important;
+    border-bottom: 1px solid #f0f4fb !important;
+}
+
+.table-header h3 {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: #1a2332 !important;
+}
+
+.table-header h3 i {
+    color: #4a6cf7 !important;
+    margin-right: 8px !important;
+}
+
+.table-scroll {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+.table-unidades {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 14px !important;
+    min-width: 700px !important;
+}
+
+.table-unidades thead {
+    background: #f8faff !important;
+}
+
+.table-unidades th {
+    padding: 14px 16px !important;
+    text-align: left !important;
+    font-weight: 600 !important;
+    color: #4a5a72 !important;
+    font-size: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    border-bottom: 2px solid #e8edf5 !important;
+}
+
+.table-unidades td {
+    padding: 14px 16px !important;
+    border-bottom: 1px solid #f0f4fb !important;
+    vertical-align: middle !important;
+}
+
+.table-unidades tbody tr:hover {
+    background: #f8faff !important;
+}
+
+.table-unidades tbody tr:last-child td {
+    border-bottom: none !important;
+}
+
+.table-unidades td strong {
+    color: #1a2332 !important;
+}
+
+.empty-state {
+    text-align: center !important;
+    padding: 48px 20px !important;
+    color: #7a8aa0 !important;
+}
+
+.empty-state i {
+    font-size: 48px !important;
+    color: #dce3ef !important;
+    display: block !important;
+    margin-bottom: 12px !important;
+}
+
+.actions {
+    display: flex !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+}
+
+.btn-action {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    text-decoration: none !important;
+    transition: all 0.2s !important;
+    border: none !important;
+    cursor: pointer !important;
+    gap: 4px !important;
+}
+
+.btn-edit {
+    background: #eff6ff !important;
+    color: #1e40af !important;
+}
+
+.btn-edit:hover {
+    background: #dbeafe !important;
+}
+
+.btn-view {
+    background: #f0f9ff !important;
+    color: #0c4a6e !important;
+}
+
+.btn-view:hover {
+    background: #e0f2fe !important;
+}
+
+.btn-action.btn-success {
+    background: #ecfdf5 !important;
+    color: #065f46 !important;
+}
+
+.btn-action.btn-success:hover {
+    background: #d1fae5 !important;
+}
+
+.btn-action.btn-danger {
+    background: #fef2f2 !important;
+    color: #991b1b !important;
+}
+
+.btn-action.btn-danger:hover {
+    background: #fee2e2 !important;
+}
+
+/* ======================================================
+   FILTROS - ALINHAMENTO CORRETO DOS BOTÕES
+   ====================================================== */
+
+/* Container principal do filtro */
+.filter-form {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+    align-items: center !important;
+}
+
+/* Cada grupo de campo */
+.filter-form .form-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    flex: 1 1 180px !important;
+    min-width: 140px !important;
+}
+
+/* Labels */
+.filter-form .form-group label {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #4a5a72 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Inputs e selects */
+.filter-form .form-group input,
+.filter-form .form-group select {
+    padding: 10px 14px !important;
+    border: 1px solid #dce3ef !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    background: #fafbff !important;
+    transition: all 0.2s !important;
+    font-family: inherit !important;
+    width: 100% !important;
+    height: 42px !important;
+    box-sizing: border-box !important;
+    line-height: 1.4 !important;
+    margin: 0 !important;
+}
+
+.filter-form .form-group input:focus,
+.filter-form .form-group select:focus {
+    outline: none !important;
+    border-color: #4a6cf7 !important;
+    box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.15) !important;
+    background: #fff !important;
+}
+
+/* 🔥 BOTÕES - Mantendo a aparência original com borda levemente arredondada */
+.filter-form .btn {
+    /* Remove estilos conflitantes do CSS geral */
+    all: unset !important;
+    
+    /* Aplica os estilos corretos mantendo a aparência original */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    padding: 0 24px !important;
+    border-radius: 8px !important; /* 🔥 Borda levemente arredondada (igual aos inputs) */
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    font-family: 'Inter', sans-serif !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    border: none !important;
+    white-space: nowrap !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    flex-shrink: 0 !important;
+    text-decoration: none !important;
+}
+
+/* Ícones dentro dos botões */
+.filter-form .btn i {
+    margin-right: 4px !important;
+}
+
+/* Botão Filtrar (Primário) */
+.filter-form .btn-primary {
+    background: #1a73e8 !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 16px -4px rgba(26, 115, 232, 0.35) !important;
+}
+
+.filter-form .btn-primary:hover {
+    background: #1557b0 !important;
+    transform: scale(1.02) !important;
+    box-shadow: 0 6px 16px -4px rgba(26, 115, 232, 0.45) !important;
+}
+
+/* Botão Limpar (Danger) */
+.filter-form .btn-danger {
+    background: #dc3545 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.filter-form .btn-danger:hover {
+    background: #c82333 !important;
+    transform: scale(1.02) !important;
+}
+
+/* ======================================================
+   CARD PANEL
+   ====================================================== */
+
+.card-panel {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 24px 28px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+    border: 1px solid #eef2f8 !important;
+    margin-bottom: 20px !important;
+}
+
+/* ======================================================
+   PAGINAÇÃO
+   ====================================================== */
+
+.pagination-container {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    padding: 16px 22px !important;
+    border-top: 1px solid #f0f4fb !important;
+    flex-wrap: wrap !important;
+    background: #ffffff !important;
+    border-radius: 0 0 16px 16px !important;
+}
+
+.pagination-container .btn {
+    all: unset !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    font-family: 'Inter', sans-serif !important;
+    border-radius: 8px !important; /* 🔥 Borda levemente arredondada */
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    background: transparent !important;
+    color: #1a2639 !important;
+    border: 1px solid #dce3ef !important;
+    text-decoration: none !important;
+}
+
+.pagination-container .btn-primary {
+    background: #1a73e8 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+.pagination-container .btn-primary:hover {
+    background: #1557b0 !important;
+}
+
+.pagination-container .btn:hover:not(.btn-primary) {
+    background: #f0f4fb !important;
+    border-color: #1a73e8 !important;
+}
+
+/* ======================================================
+   RESPONSIVIDADE
+   ====================================================== */
+
+@media (max-width: 768px) {
+    .filter-form {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .filter-form .form-group {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+    
+    .filter-form .btn {
+        width: 100% !important;
+        justify-content: center !important;
+        height: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        border-radius: 8px !important;
+    }
+    
+    .table-unidades {
+        font-size: 13px !important;
+        min-width: 600px !important;
+    }
+    
+    .table-unidades th,
+    .table-unidades td {
+        padding: 10px 12px !important;
+    }
+    
+    .actions {
+        flex-direction: column !important;
+        gap: 4px !important;
+    }
+    
+    .btn-action {
+        padding: 4px 10px !important;
+        font-size: 11px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-panel {
+        padding: 16px !important;
+    }
+    
+    .filter-form .form-group input,
+    .filter-form .form-group select {
+        height: 40px !important;
+        font-size: 13px !important;
+    }
+    
+    .filter-form .btn {
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+    }
+    
+    .table-unidades {
+        font-size: 12px !important;
+        min-width: 500px !important;
+    }
+    
+    .table-unidades th,
+    .table-unidades td {
+        padding: 8px 10px !important;
+    }
+}

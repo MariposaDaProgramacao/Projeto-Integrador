@@ -1,7 +1,7 @@
 <?php
 // ============================================================
-// ARQUIVO: USUARIOS(ADM)/editar_usuarios.php (MODIFICADO PARA MULTI-TENANT)
-// FUNÇÃO: Editar usuário com ações de status
+// ARQUIVO: USUARIOS(ADM)/editar_usuarios.php
+// FUNÇÃO: Editar profissional (funcionarios) com ações de status
 // ============================================================
 
 // ============================================================
@@ -15,7 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../conexao_banco.php';
 
 // ============================================================
-// 2. VERIFICAR LOGIN (NOVO SISTEMA)
+// 2. VERIFICAR LOGIN
 // ============================================================
 
 if (!isLoggedIn()) {
@@ -24,7 +24,7 @@ if (!isLoggedIn()) {
 }
 
 // ============================================================
-// 3. VERIFICAR PERMISSÃO (NOVO SISTEMA)
+// 3. VERIFICAR PERMISSÃO
 // ============================================================
 
 $tipos_permitidos = ['admin_cliente', 'gerente'];
@@ -34,7 +34,7 @@ if (!in_array($_SESSION['tipo_usuario'] ?? '', $tipos_permitidos)) {
 }
 
 // ============================================================
-// 4. VARIÁVEIS DO SISTEMA (NOVO)
+// 4. VARIÁVEIS DO SISTEMA
 // ============================================================
 
 $id_cliente = getClienteId();
@@ -58,25 +58,26 @@ if ($id_unidade_usuario == 0 || $id_unidade_usuario === null) {
 }
 
 // ============================================================
-// 5. RECEBER ID DO USUÁRIO
+// 5. RECEBER ID DO FUNCIONÁRIO
 // ============================================================
 
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) {
-    setMessage('error', 'ID do usuário inválido.');
+    setMessage('error', 'ID do profissional inválido.');
     redirect('listar_usuarios.php');
 }
 
 // ============================================================
-// 6. BUSCAR DADOS DO USUÁRIO (FILTRADO POR CLIENTE)
+// 6. BUSCAR DADOS DO FUNCIONÁRIO (FILTRADO POR CLIENTE)
 // ============================================================
 
 try {
-    $sql = "SELECT u.*, un.nome_unidade, un.estado_unidade 
-            FROM usuarios_sistema u
-            LEFT JOIN unidades un ON u.id_unidade = un.id_unidade AND un.id_cliente = u.id_cliente
-            WHERE u.id_usuario = :id 
-            AND u.id_cliente = :id_cliente";
+    // ✅ USANDO TABELA funcionarios
+    $sql = "SELECT f.*, u.nome_unidade, u.estado_unidade 
+            FROM funcionarios f
+            LEFT JOIN unidades u ON f.id_unidade = u.id_unidade
+            WHERE f.id_funcionario = :id 
+            AND f.id_cliente = :id_cliente";
     $stmt = $conn->prepare($sql);
     $stmt->execute([
         ':id' => $id,
@@ -85,31 +86,26 @@ try {
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$usuario) {
-        setMessage('error', 'Usuário não encontrado ou não pertence à sua organização.');
+        setMessage('error', 'Profissional não encontrado ou não pertence à sua organização.');
         redirect('listar_usuarios.php');
     }
 
-    // Verificar permissão: gerente só pode editar usuários da sua unidade
+    // Verificar permissão: gerente só pode editar funcionários da sua unidade
     if ($tipo_usuario === 'gerente') {
         if ($usuario['id_unidade'] != $id_unidade_usuario) {
-            setMessage('error', 'Você não tem permissão para editar este usuário.');
+            setMessage('error', 'Você não tem permissão para editar este profissional.');
             redirect('listar_usuarios.php');
         }
     }
 
     // Não permitir editar administradores (apenas admin pode editar admin)
-    if ($usuario['tipo_usuario'] === 'admin_cliente' && $tipo_usuario !== 'admin_cliente') {
+    if ($usuario['cargo_funcionario'] === 'administrador' && $tipo_usuario !== 'admin_cliente') {
         setMessage('error', 'Apenas administradores podem editar outros administradores.');
         redirect('listar_usuarios.php');
     }
 
-    // Não permitir editar a si mesmo (apenas para evitar confusão)
-    if ($usuario['id_usuario'] == $id_usuario_logado && isset($_POST['acao']) && $_POST['acao'] === 'salvar') {
-        // Permite editar, mas com restrições
-    }
-
 } catch (PDOException $e) {
-    setMessage('error', 'Erro ao buscar usuário: ' . $e->getMessage());
+    setMessage('error', 'Erro ao buscar profissional: ' . $e->getMessage());
     redirect('listar_usuarios.php');
 }
 
@@ -142,27 +138,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($acao === 'salvar') {
         
         $nome = trim($_POST['nome'] ?? '');
-        $tipo_usuario_novo = $_POST['tipo_usuario'] ?? '';
+        $cargo = $_POST['cargo'] ?? '';
         $unidade = (int)($_POST['unidade'] ?? 0);
-        $status_usuario = $_POST['status_usuario'] ?? 'inativo';
+        $status_acesso = $_POST['status_acesso'] ?? 'inativo';
         $email = trim($_POST['email'] ?? '');
         $telefone = trim($_POST['telefone'] ?? '');
         $telefone = preg_replace('/\D/', '', $telefone);
 
-        // Mapear cargo para tipo de usuário
-        $tipo_mapping = [
-            'admin_cliente' => 'admin_cliente',
-            'coordenador' => 'gerente',
-            'professor' => 'usuario',
-            'auxiliar' => 'usuario',
-            'gerente' => 'gerente',
-            'secretaria' => 'usuario',
-            'portaria' => 'usuario'
-        ];
-        $tipo_usuario_db = $tipo_mapping[$tipo_usuario_novo] ?? 'usuario';
-
         // Validar campos obrigatórios
-        if (empty($nome) || empty($tipo_usuario_novo) || $unidade <= 0 || empty($email)) {
+        if (empty($nome) || empty($cargo) || $unidade <= 0 || empty($email)) {
             $erro = 'Preencha todos os campos obrigatórios.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $erro = 'E-mail inválido.';
@@ -171,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 // Verificar permissão para alterar cargo
-                if ($usuario['tipo_usuario'] === 'admin_cliente' && $tipo_usuario !== 'admin_cliente') {
+                if ($usuario['cargo_funcionario'] === 'administrador' && $tipo_usuario !== 'admin_cliente') {
                     $erro = 'Apenas administradores podem editar administradores.';
                 } else {
                     // Verificar se a unidade pertence ao cliente
@@ -183,37 +167,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($checkUnidade->fetchColumn() == 0) {
                         $erro = 'Unidade inválida ou não pertence à sua organização.';
                     } else {
-                        // Verificar se o e-mail já existe (exceto para o próprio usuário)
-                        $check = $conn->prepare("SELECT COUNT(*) FROM usuarios_sistema 
-                                                 WHERE email_usuario = :email 
+                        // Verificar se o e-mail já existe (exceto para o próprio funcionário)
+                        $check = $conn->prepare("SELECT COUNT(*) FROM funcionarios 
+                                                 WHERE email_funcionario = :email 
                                                  AND id_cliente = :id_cliente
-                                                 AND id_usuario != :id");
+                                                 AND id_funcionario != :id");
                         $check->execute([
                             ':email' => $email,
                             ':id_cliente' => $id_cliente,
                             ':id' => $id
                         ]);
                         if ($check->fetchColumn() > 0) {
-                            $erro = 'Este e-mail já está em uso por outro usuário nesta organização.';
+                            $erro = 'Este e-mail já está em uso por outro profissional nesta organização.';
                         } else {
                             $conn->beginTransaction();
 
-                            // Atualizar usuário
-                            $sqlUpdate = "UPDATE usuarios_sistema SET 
-                                nome_usuario = :nome,
-                                tipo_usuario = :tipo,
+                            // ✅ Atualizar funcionario
+                            $sqlUpdate = "UPDATE funcionarios SET 
+                                nome_funcionario = :nome,
+                                cargo_funcionario = :cargo,
                                 id_unidade = :unidade,
-                                status_usuario = :status,
-                                email_usuario = :email,
-                                telefone_usuario = :telefone
-                            WHERE id_usuario = :id 
+                                status_acesso = :status,
+                                email_funcionario = :email,
+                                telefone_funcionario = :telefone
+                            WHERE id_funcionario = :id 
                             AND id_cliente = :id_cliente";
                             $stmtUpdate = $conn->prepare($sqlUpdate);
                             $stmtUpdate->execute([
                                 ':nome' => $nome,
-                                ':tipo' => $tipo_usuario_db,
+                                ':cargo' => $cargo,
                                 ':unidade' => $unidade,
-                                ':status' => $status_usuario,
+                                ':status' => $status_acesso,
                                 ':email' => $email,
                                 ':telefone' => $telefone,
                                 ':id' => $id,
@@ -231,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     ip_origem
                                 ) VALUES (
                                     :id_funcionario,
-                                    'usuarios_sistema',
+                                    'funcionarios',
                                     :id_registro,
                                     'UPDATE',
                                     :dados,
@@ -242,12 +226,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     ':id_funcionario' => $id_usuario_logado,
                                     ':id_registro' => $id,
                                     ':dados' => json_encode([
-                                        'usuario' => $nome,
+                                        'profissional' => $nome,
                                         'email' => $email,
-                                        'tipo_anterior' => $usuario['tipo_usuario'],
-                                        'tipo_novo' => $tipo_usuario_novo,
-                                        'status_anterior' => $usuario['status_usuario'],
-                                        'status_novo' => $status_usuario
+                                        'cargo_anterior' => $usuario['cargo_funcionario'],
+                                        'cargo_novo' => $cargo,
+                                        'status_anterior' => $usuario['status_acesso'],
+                                        'status_novo' => $status_acesso
                                     ]),
                                     ':ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'
                                 ]);
@@ -257,14 +241,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                             $conn->commit();
 
-                            $sucesso = 'Dados do usuário atualizados com sucesso!';
+                            $sucesso = 'Dados do profissional atualizados com sucesso!';
 
-                            // Recarregar dados do usuário
-                            $sqlReload = "SELECT u.*, un.nome_unidade, un.estado_unidade 
-                                          FROM usuarios_sistema u
-                                          LEFT JOIN unidades un ON u.id_unidade = un.id_unidade AND un.id_cliente = u.id_cliente
-                                          WHERE u.id_usuario = :id 
-                                          AND u.id_cliente = :id_cliente";
+                            // Recarregar dados do funcionário
+                            $sqlReload = "SELECT f.*, u.nome_unidade, u.estado_unidade 
+                                          FROM funcionarios f
+                                          LEFT JOIN unidades u ON f.id_unidade = u.id_unidade
+                                          WHERE f.id_funcionario = :id 
+                                          AND f.id_cliente = :id_cliente";
                             $stmtReload = $conn->prepare($sqlReload);
                             $stmtReload->execute([
                                 ':id' => $id,
@@ -287,18 +271,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 8.2 AÇÃO: APROVAR
     // ============================================================
     if ($acao === 'aprovar') {
-        if ($usuario['status_usuario'] === 'inativo') {
-            $sqlUpdate = "UPDATE usuarios_sistema 
-                          SET status_usuario = 'ativo' 
-                          WHERE id_usuario = :id 
+        if ($usuario['status_acesso'] === 'inativo') {
+            $sqlUpdate = "UPDATE funcionarios 
+                          SET status_acesso = 'ativo' 
+                          WHERE id_funcionario = :id 
                           AND id_cliente = :id_cliente";
             $stmtUpdate = $conn->prepare($sqlUpdate);
             $stmtUpdate->execute([
                 ':id' => $id,
                 ':id_cliente' => $id_cliente
             ]);
-            $sucesso = 'Usuário aprovado com sucesso!';
-            $usuario['status_usuario'] = 'ativo';
+            $sucesso = 'Profissional aprovado com sucesso!';
+            $usuario['status_acesso'] = 'ativo';
             
             // Registrar no histórico
             try {
@@ -311,7 +295,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ip_origem
                 ) VALUES (
                     :id_funcionario,
-                    'usuarios_sistema',
+                    'funcionarios',
                     :id_registro,
                     'UPDATE',
                     :dados,
@@ -322,7 +306,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id_funcionario' => $id_usuario_logado,
                     ':id_registro' => $id,
                     ':dados' => json_encode([
-                        'usuario' => $usuario['nome_usuario'],
+                        'profissional' => $usuario['nome_funcionario'],
                         'status_anterior' => 'inativo',
                         'status_novo' => 'ativo',
                         'acao' => 'Aprovação'
@@ -333,7 +317,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log('Erro ao registrar histórico: ' . $e->getMessage());
             }
         } else {
-            $erro = 'Usuário já está ativo.';
+            $erro = 'Profissional já está ativo.';
         }
     }
 
@@ -341,18 +325,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 8.3 AÇÃO: BLOQUEAR
     // ============================================================
     if ($acao === 'bloquear') {
-        if ($usuario['status_usuario'] === 'ativo') {
-            $sqlUpdate = "UPDATE usuarios_sistema 
-                          SET status_usuario = 'bloqueado' 
-                          WHERE id_usuario = :id 
+        if ($usuario['status_acesso'] === 'ativo') {
+            $sqlUpdate = "UPDATE funcionarios 
+                          SET status_acesso = 'bloqueado' 
+                          WHERE id_funcionario = :id 
                           AND id_cliente = :id_cliente";
             $stmtUpdate = $conn->prepare($sqlUpdate);
             $stmtUpdate->execute([
                 ':id' => $id,
                 ':id_cliente' => $id_cliente
             ]);
-            $sucesso = 'Usuário bloqueado com sucesso!';
-            $usuario['status_usuario'] = 'bloqueado';
+            $sucesso = 'Profissional bloqueado com sucesso!';
+            $usuario['status_acesso'] = 'bloqueado';
             
             // Registrar no histórico
             try {
@@ -365,7 +349,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ip_origem
                 ) VALUES (
                     :id_funcionario,
-                    'usuarios_sistema',
+                    'funcionarios',
                     :id_registro,
                     'UPDATE',
                     :dados,
@@ -376,7 +360,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id_funcionario' => $id_usuario_logado,
                     ':id_registro' => $id,
                     ':dados' => json_encode([
-                        'usuario' => $usuario['nome_usuario'],
+                        'profissional' => $usuario['nome_funcionario'],
                         'status_anterior' => 'ativo',
                         'status_novo' => 'bloqueado',
                         'acao' => 'Bloqueio'
@@ -387,7 +371,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log('Erro ao registrar histórico: ' . $e->getMessage());
             }
         } else {
-            $erro = 'Apenas usuários ativos podem ser bloqueados.';
+            $erro = 'Apenas profissionais ativos podem ser bloqueados.';
         }
     }
 
@@ -395,18 +379,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 8.4 AÇÃO: DESBLOQUEAR
     // ============================================================
     if ($acao === 'desbloquear') {
-        if ($usuario['status_usuario'] === 'bloqueado') {
-            $sqlUpdate = "UPDATE usuarios_sistema 
-                          SET status_usuario = 'ativo' 
-                          WHERE id_usuario = :id 
+        if ($usuario['status_acesso'] === 'bloqueado') {
+            $sqlUpdate = "UPDATE funcionarios 
+                          SET status_acesso = 'ativo' 
+                          WHERE id_funcionario = :id 
                           AND id_cliente = :id_cliente";
             $stmtUpdate = $conn->prepare($sqlUpdate);
             $stmtUpdate->execute([
                 ':id' => $id,
                 ':id_cliente' => $id_cliente
             ]);
-            $sucesso = 'Usuário desbloqueado com sucesso!';
-            $usuario['status_usuario'] = 'ativo';
+            $sucesso = 'Profissional desbloqueado com sucesso!';
+            $usuario['status_acesso'] = 'ativo';
             
             // Registrar no histórico
             try {
@@ -419,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ip_origem
                 ) VALUES (
                     :id_funcionario,
-                    'usuarios_sistema',
+                    'funcionarios',
                     :id_registro,
                     'UPDATE',
                     :dados,
@@ -430,7 +414,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':id_funcionario' => $id_usuario_logado,
                     ':id_registro' => $id,
                     ':dados' => json_encode([
-                        'usuario' => $usuario['nome_usuario'],
+                        'profissional' => $usuario['nome_funcionario'],
                         'status_anterior' => 'bloqueado',
                         'status_novo' => 'ativo',
                         'acao' => 'Desbloqueio'
@@ -441,55 +425,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log('Erro ao registrar histórico: ' . $e->getMessage());
             }
         } else {
-            $erro = 'Apenas usuários bloqueados podem ser desbloqueados.';
-        }
-    }
-
-    // Recarregar dados após ações
-    if (!empty($sucesso) || !empty($erro)) {
-        try {
-            $sqlReload = "SELECT u.*, un.nome_unidade, un.estado_unidade 
-                          FROM usuarios_sistema u
-                          LEFT JOIN unidades un ON u.id_unidade = un.id_unidade AND un.id_cliente = u.id_cliente
-                          WHERE u.id_usuario = :id 
-                          AND u.id_cliente = :id_cliente";
-            $stmtReload = $conn->prepare($sqlReload);
-            $stmtReload->execute([
-                ':id' => $id,
-                ':id_cliente' => $id_cliente
-            ]);
-            $usuario = $stmtReload->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            // Ignora
+            $erro = 'Apenas profissionais bloqueados podem ser desbloqueados.';
         }
     }
 }
 
 // ============================================================
-// 9. DADOS DO USUÁRIO LOGADO
+// 9. TÍTULO DA PÁGINA
 // ============================================================
 
-$nomeUsuario = htmlspecialchars($_SESSION['nome_usuario'] ?? 'Usuário');
-
-// ============================================================
-// 10. TÍTULO DA PÁGINA
-// ============================================================
-
-$titulo = 'Editar Usuário - Gerenciamento de Ambientes';
-
-// ============================================================
-// 11. FUNÇÃO PARA FORMATAR TELEFONE
-// ============================================================
-function formatarTelefone($telefone) {
-    if (empty($telefone)) return '';
-    $telefone = preg_replace('/\D/', '', $telefone);
-    if (strlen($telefone) === 11) {
-        return '(' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 5) . '-' . substr($telefone, 7);
-    } elseif (strlen($telefone) === 10) {
-        return '(' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 4) . '-' . substr($telefone, 6);
-    }
-    return $telefone;
-}
+$titulo = 'Editar Profissional - Gerenciamento de Ambientes';
 
 // Mensagens da sessão
 $message = getMessage();
@@ -502,11 +447,14 @@ if ($message && $message['tipo'] === 'error') {
 <?php include_once __DIR__ . '/../INCLUDES/head.php'; ?>
 <?php include_once __DIR__ . '/../INCLUDES/sidebar.php'; ?>
 
+<!-- CSS ESPECÍFICO PARA O MÓDULO DE ADMINISTRAÇÃO -->
+<link rel="stylesheet" href="usuarios_adm.css">
+
 <main class="main">
     <header class="page-header">
         <div>
-            <h1 class="page-title"><i class="fas fa-user-edit"></i> Editar Usuário</h1>
-            <p class="page-subtitle">Edite as informações do usuário selecionado</p>
+            <h1 class="page-title"><i class="fas fa-user-edit"></i> Editar Profissional</h1>
+            <p class="page-subtitle">Edite as informações do profissional selecionado</p>
         </div>
         <div style="font-size: 13px; color: #7a8aa0;">
             <i class="fas fa-building"></i> <?php echo htmlspecialchars($_SESSION['nome_cliente'] ?? ''); ?>
@@ -521,37 +469,35 @@ if ($message && $message['tipo'] === 'error') {
     <?php endif; ?>
 
     <!-- ========================================== -->
-    <!-- INFORMAÇÕES DO USUÁRIO (CARD) - NOME DESTAQUE -->
+    <!-- INFORMAÇÕES DO PROFISSIONAL -->
     <!-- ========================================== -->
     <div class="card-panel" style="margin-bottom: 20px;">
-        <!-- Cabeçalho com nome e status -->
         <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px; border-bottom: 2px solid #edf2f9; padding-bottom: 16px;">
             <i class="fas fa-user-circle" style="font-size: 48px; color: #0e1a2b; background: #f0f4fb; padding: 8px; border-radius: 50%;"></i>
             <div style="flex: 1;">
                 <h2 style="margin: 0; font-size: 24px; color: #0e1a2b; font-weight: 700;">
-                    <?php echo htmlspecialchars($usuario['nome_usuario']); ?>
+                    <?php echo htmlspecialchars($usuario['nome_funcionario']); ?>
                 </h2>
                 <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px;">
                     <span style="font-size: 14px; color: #5a6a7e;">
                         <i class="fas fa-envelope" style="margin-right: 4px;"></i>
-                        <?php echo htmlspecialchars($usuario['email_usuario']); ?>
+                        <?php echo htmlspecialchars($usuario['email_funcionario']); ?>
                     </span>
-                    <?php if (!empty($usuario['telefone_usuario'])): ?>
+                    <?php if (!empty($usuario['telefone_funcionario'])): ?>
                         <span style="font-size: 14px; color: #5a6a7e;">
                             <i class="fas fa-phone" style="margin-right: 4px;"></i>
-                            <?php echo htmlspecialchars(formatarTelefone($usuario['telefone_usuario'])); ?>
+                            <?php echo htmlspecialchars(formatarTelefone($usuario['telefone_funcionario'])); ?>
                         </span>
                     <?php endif; ?>
                 </div>
             </div>
             <div style="text-align: right;">
                 <?php 
-                $status = $usuario['status_usuario'];
+                $status = $usuario['status_acesso'];
                 $status_labels = [
                     'ativo' => ['class' => 'badge-success', 'icon' => 'fa-circle', 'text' => 'Ativo'],
                     'inativo' => ['class' => 'badge-warning', 'icon' => 'fa-clock', 'text' => 'Inativo'],
-                    'bloqueado' => ['class' => 'badge-danger', 'icon' => 'fa-lock', 'text' => 'Bloqueado'],
-                    'pendente' => ['class' => 'badge-warning', 'icon' => 'fa-hourglass-half', 'text' => 'Pendente']
+                    'bloqueado' => ['class' => 'badge-danger', 'icon' => 'fa-lock', 'text' => 'Bloqueado']
                 ];
                 $label = $status_labels[$status] ?? ['class' => 'badge-secondary', 'icon' => 'fa-circle', 'text' => $status];
                 ?>
@@ -561,72 +507,68 @@ if ($message && $message['tipo'] === 'error') {
             </div>
         </div>
 
-        <!-- Detalhes adicionais (cargo, unidade) -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div>
                 <span style="font-size: 12px; color: #7a8aa0; text-transform: uppercase; letter-spacing: 0.5px;">Cargo</span>
                 <div style="font-weight: 600; font-size: 16px;">
                     <?php 
                     $cargos = [
-                        'admin_cliente' => 'Administrador',
-                        'gerente' => 'Coordenador',
-                        'usuario' => 'Usuário',
-                        'visualizador' => 'Visualizador'
+                        'administrador' => 'Administrador',
+                        'coordenador' => 'Coordenador',
+                        'professor' => 'Professor',
+                        'auxiliar' => 'Auxiliar',
+                        'gerente' => 'Gerente',
+                        'secretaria' => 'Secretaria',
+                        'portaria' => 'Portaria'
                     ];
-                    echo $cargos[$usuario['tipo_usuario']] ?? ucfirst($usuario['tipo_usuario']);
+                    echo $cargos[$usuario['cargo_funcionario']] ?? ucfirst($usuario['cargo_funcionario']);
                     ?>
                 </div>
             </div>
             <div>
                 <span style="font-size: 12px; color: #7a8aa0; text-transform: uppercase; letter-spacing: 0.5px;">Unidade</span>
-                <div style="font-weight: 600; font-size: 16px;"><?php echo htmlspecialchars($usuario['nome_unidade'] ?? 'Não definida'); ?></div>
+                <div style="font-weight: 600; font-size: 16px;">
+                    <?php echo htmlspecialchars($usuario['nome_unidade'] ?? 'Não definida'); ?>
+                </div>
             </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- BOTÕES DE AÇÃO (APROVAR/BLOQUEAR/DESBLOQUEAR) -->
-        <!-- ========================================== -->
+        <!-- BOTÕES DE AÇÃO -->
         <div style="display: flex; flex-wrap: wrap; gap: 8px; border-top: 1px solid #edf2f9; padding-top: 16px; margin-top: 16px;">
-            <?php if ($usuario['status_usuario'] === 'inativo' || $usuario['status_usuario'] === 'pendente'): ?>
-                <form method="POST" style="display: inline;" onsubmit="return confirm('Deseja realmente aprovar este usuário?')">
+            <?php if ($usuario['status_acesso'] === 'inativo'): ?>
+                <form method="POST" style="display: inline;" onsubmit="return confirm('Deseja realmente aprovar este profissional?')">
                     <input type="hidden" name="acao" value="aprovar">
-                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Aprovar Usuário</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Aprovar Profissional</button>
                 </form>
             <?php endif; ?>
 
-            <?php if ($usuario['status_usuario'] === 'ativo'): ?>
-                <form method="POST" style="display: inline;" onsubmit="return confirm('Deseja realmente bloquear este usuário?')">
+            <?php if ($usuario['status_acesso'] === 'ativo'): ?>
+                <form method="POST" style="display: inline;" onsubmit="return confirm('Deseja realmente bloquear este profissional?')">
                     <input type="hidden" name="acao" value="bloquear">
-                    <button type="submit" class="btn btn-danger"><i class="fas fa-ban"></i> Bloquear Usuário</button>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-ban"></i> Bloquear Profissional</button>
                 </form>
             <?php endif; ?>
 
-            <?php if ($usuario['status_usuario'] === 'bloqueado'): ?>
-                <form method="POST" style="display: inline;" onsubmit="return confirm('Deseja realmente desbloquear este usuário?')">
+            <?php if ($usuario['status_acesso'] === 'bloqueado'): ?>
+                <form method="POST" style="display: inline;" onsubmit="return confirm('Deseja realmente desbloquear este profissional?')">
                     <input type="hidden" name="acao" value="desbloquear">
-                    <button type="submit" class="btn btn-success"><i class="fas fa-unlock"></i> Desbloquear Usuário</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-unlock"></i> Desbloquear Profissional</button>
                 </form>
             <?php endif; ?>
 
-            <!-- ========================================== -->
-            <!-- BOTÃO EXCLUIR (APENAS ADMIN)              -->
-            <!-- ========================================== -->
-            <?php if ($tipo_usuario === 'admin_cliente' && $usuario['tipo_usuario'] !== 'admin_cliente' && $usuario['id_usuario'] != $id_usuario_logado): ?>
-                <a href="excluir_usuario.php?id=<?php echo $usuario['id_usuario']; ?>" 
+            <?php if ($tipo_usuario === 'admin_cliente' && $usuario['cargo_funcionario'] !== 'administrador' && $usuario['id_funcionario'] != $id_usuario_logado): ?>
+                <a href="excluir_usuario.php?id=<?php echo $usuario['id_funcionario']; ?>" 
                    class="btn btn-danger"
-                   onclick="return confirm('ATENÇÃO: Esta ação é irreversível!\nDeseja realmente excluir o usuário <?php echo htmlspecialchars($usuario['nome_usuario']); ?>?')">
-                    <i class="fas fa-trash"></i> Excluir Usuário
+                   onclick="return confirm('ATENÇÃO: Esta ação é irreversível!\nDeseja realmente excluir o profissional <?php echo htmlspecialchars($usuario['nome_funcionario']); ?>?')">
+                    <i class="fas fa-trash"></i> Excluir Profissional
                 </a>
             <?php endif; ?>
 
-            <!-- ========================================== -->
-            <!-- BOTÃO REDEFINIR SENHA (APENAS ADMIN)      -->
-            <!-- ========================================== -->
-            <?php if ($tipo_usuario === 'admin_cliente' && $usuario['id_usuario'] != $id_usuario_logado): ?>
-                <a href="resetar_senha_do_usuario.php?id=<?php echo $usuario['id_usuario']; ?>" 
+            <?php if ($tipo_usuario === 'admin_cliente' && $usuario['id_funcionario'] != $id_usuario_logado): ?>
+                <a href="resetar_senha_do_usuario.php?id=<?php echo $usuario['id_funcionario']; ?>" 
                    class="btn" 
                    style="background: #e67e22; color: #fff; border-color: #d35400;"
-                   onclick="return confirm('ATENÇÃO: Isso irá gerar uma nova senha provisória para o usuário.\nA senha atual será substituída.\nDeseja continuar?')">
+                   onclick="return confirm('ATENÇÃO: Isso irá gerar uma nova senha provisória para o profissional.\nA senha atual será substituída.\nDeseja continuar?')">
                     <i class="fas fa-key"></i> Redefinir Senha
                 </a>
             <?php endif; ?>
@@ -634,7 +576,7 @@ if ($message && $message['tipo'] === 'error') {
     </div>
 
     <!-- ========================================== -->
-    <!-- FORMULÁRIO DE EDIÇÃO                      -->
+    <!-- FORMULÁRIO DE EDIÇÃO -->
     <!-- ========================================== -->
     <div class="card-panel">
         <h3 style="margin-bottom: 16px; font-size: 16px; color: #0e1a2b;">
@@ -646,11 +588,11 @@ if ($message && $message['tipo'] === 'error') {
             <div class="form-row">
                 <div class="form-group">
                     <label for="nome">Nome Completo *</label>
-                    <input type="text" name="nome" id="nome" value="<?php echo htmlspecialchars($usuario['nome_usuario']); ?>" required>
+                    <input type="text" name="nome" id="nome" value="<?php echo htmlspecialchars($usuario['nome_funcionario']); ?>" required>
                 </div>
                 <div class="form-group">
                     <label for="email">E-mail *</label>
-                    <input type="email" name="email" id="email" value="<?php echo htmlspecialchars($usuario['email_usuario']); ?>" required>
+                    <input type="email" name="email" id="email" value="<?php echo htmlspecialchars($usuario['email_funcionario']); ?>" required>
                 </div>
             </div>
 
@@ -658,25 +600,23 @@ if ($message && $message['tipo'] === 'error') {
                 <div class="form-group">
                     <label for="telefone">Telefone</label>
                     <input type="text" name="telefone" id="telefone" 
-                           value="<?php echo htmlspecialchars(formatarTelefone($usuario['telefone_usuario'] ?? '')); ?>" 
+                           value="<?php echo htmlspecialchars(formatarTelefone($usuario['telefone_funcionario'] ?? '')); ?>" 
                            placeholder="(XX) XXXXX-XXXX"
                            maxlength="17">
                 </div>
                 <div class="form-group">
-                    <label for="tipo_usuario">Cargo *</label>
-                    <select name="tipo_usuario" id="tipo_usuario" required>
+                    <label for="cargo">Cargo *</label>
+                    <select name="cargo" id="cargo" required>
                         <option value="">Selecione o cargo</option>
-                        
                         <?php if ($tipo_usuario === 'admin_cliente'): ?>
-                            <option value="admin_cliente" <?php echo $usuario['tipo_usuario'] === 'admin_cliente' ? 'selected' : ''; ?>>Administrador</option>
+                            <option value="administrador" <?php echo $usuario['cargo_funcionario'] === 'administrador' ? 'selected' : ''; ?>>Administrador</option>
                         <?php endif; ?>
-                        
-                        <option value="coordenador" <?php echo $usuario['tipo_usuario'] === 'gerente' ? 'selected' : ''; ?>>Coordenador</option>
-                        <option value="professor" <?php echo $usuario['tipo_usuario'] === 'usuario' && strpos($usuario['tipo_usuario_original'] ?? '', 'professor') !== false ? 'selected' : ''; ?>>Professor</option>
-                        <option value="auxiliar" <?php echo $usuario['tipo_usuario'] === 'usuario' && strpos($usuario['tipo_usuario_original'] ?? '', 'auxiliar') !== false ? 'selected' : ''; ?>>Auxiliar</option>
-                        <option value="gerente" <?php echo $usuario['tipo_usuario'] === 'gerente' ? 'selected' : ''; ?>>Gerente</option>
-                        <option value="secretaria" <?php echo $usuario['tipo_usuario'] === 'usuario' && strpos($usuario['tipo_usuario_original'] ?? '', 'secretaria') !== false ? 'selected' : ''; ?>>Secretaria</option>
-                        <option value="portaria" <?php echo $usuario['tipo_usuario'] === 'usuario' && strpos($usuario['tipo_usuario_original'] ?? '', 'portaria') !== false ? 'selected' : ''; ?>>Portaria</option>
+                        <option value="coordenador" <?php echo $usuario['cargo_funcionario'] === 'coordenador' ? 'selected' : ''; ?>>Coordenador</option>
+                        <option value="professor" <?php echo $usuario['cargo_funcionario'] === 'professor' ? 'selected' : ''; ?>>Professor</option>
+                        <option value="auxiliar" <?php echo $usuario['cargo_funcionario'] === 'auxiliar' ? 'selected' : ''; ?>>Auxiliar</option>
+                        <option value="gerente" <?php echo $usuario['cargo_funcionario'] === 'gerente' ? 'selected' : ''; ?>>Gerente</option>
+                        <option value="secretaria" <?php echo $usuario['cargo_funcionario'] === 'secretaria' ? 'selected' : ''; ?>>Secretaria</option>
+                        <option value="portaria" <?php echo $usuario['cargo_funcionario'] === 'portaria' ? 'selected' : ''; ?>>Portaria</option>
                     </select>
                 </div>
             </div>
@@ -703,12 +643,11 @@ if ($message && $message['tipo'] === 'error') {
                     <?php endif; ?>
                 </div>
                 <div class="form-group">
-                    <label for="status_usuario">Status de Acesso</label>
-                    <select name="status_usuario" id="status_usuario">
-                        <option value="ativo" <?php echo $usuario['status_usuario'] === 'ativo' ? 'selected' : ''; ?>>Ativo</option>
-                        <option value="inativo" <?php echo $usuario['status_usuario'] === 'inativo' ? 'selected' : ''; ?>>Inativo</option>
-                        <option value="bloqueado" <?php echo $usuario['status_usuario'] === 'bloqueado' ? 'selected' : ''; ?>>Bloqueado</option>
-                        <option value="pendente" <?php echo $usuario['status_usuario'] === 'pendente' ? 'selected' : ''; ?>>Pendente</option>
+                    <label for="status_acesso">Status de Acesso</label>
+                    <select name="status_acesso" id="status_acesso">
+                        <option value="ativo" <?php echo $usuario['status_acesso'] === 'ativo' ? 'selected' : ''; ?>>Ativo</option>
+                        <option value="inativo" <?php echo $usuario['status_acesso'] === 'inativo' ? 'selected' : ''; ?>>Inativo</option>
+                        <option value="bloqueado" <?php echo $usuario['status_acesso'] === 'bloqueado' ? 'selected' : ''; ?>>Bloqueado</option>
                     </select>
                     <small>Alterar manualmente o status (use os botões acima para ações rápidas).</small>
                 </div>
@@ -724,52 +663,29 @@ if ($message && $message['tipo'] === 'error') {
     <?php include_once __DIR__ . '/../INCLUDES/footer.php'; ?>
 </main>
 
-<!-- ========================================== -->
-<!-- SCRIPT DA MÁSCARA DE TELEFONE (JavaScript Puro) -->
-<!-- ========================================== -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var telefoneInput = document.getElementById('telefone');
-    
-    telefoneInput.addEventListener('input', function(e) {
-        var value = this.value.replace(/\D/g, '');
-        var formatted = '';
-        
-        if (value.length > 0) {
-            if (value.length <= 2) {
-                formatted = '(' + value;
-            } else if (value.length <= 6) {
-                formatted = '(' + value.substring(0, 2) + ') ' + value.substring(2);
-            } else {
-                formatted = '(' + value.substring(0, 2) + ') ' + value.substring(2, 7) + '-' + value.substring(7, 11);
-            }
+    if (telefoneInput) {
+        telefoneInput.addEventListener('input', function(e) {
+            var value = this.value.replace(/\D/g, '');
+            var formatted = '';
             
-            if (value.length >= 11) {
-                formatted = formatted.substring(0, 17);
+            if (value.length > 0) {
+                if (value.length <= 2) {
+                    formatted = '(' + value;
+                } else if (value.length <= 6) {
+                    formatted = '(' + value.substring(0, 2) + ') ' + value.substring(2);
+                } else {
+                    formatted = '(' + value.substring(0, 2) + ') ' + value.substring(2, 7) + '-' + value.substring(7, 11);
+                }
+                if (value.length >= 11) {
+                    formatted = formatted.substring(0, 17);
+                }
             }
-        }
-        
-        this.value = formatted;
-    });
-    
-    telefoneInput.addEventListener('blur', function() {
-        var numeros = this.value.replace(/\D/g, '');
-        if (numeros.length > 0 && numeros.length < 10) {
-            this.style.borderColor = '#ff6b6b';
-            this.style.borderWidth = '2px';
-            this.style.borderStyle = 'solid';
-        } else {
-            this.style.borderColor = '';
-            this.style.borderWidth = '';
-            this.style.borderStyle = '';
-        }
-    });
-    
-    telefoneInput.addEventListener('focus', function() {
-        this.style.borderColor = '';
-        this.style.borderWidth = '';
-        this.style.borderStyle = '';
-    });
+            this.value = formatted;
+        });
+    }
 });
 </script>
 

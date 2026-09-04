@@ -1,7 +1,7 @@
 <?php
 // ============================================================
-// ARQUIVO: USUARIOS(ADM)/excluir_usuario.php (MODIFICADO PARA MULTI-TENANT)
-// FUNÇÃO: Excluir usuário (apenas administradores)
+// ARQUIVO: USUARIOS(ADM)/excluir_usuario.php
+// FUNÇÃO: Excluir profissional (funcionarios) - apenas administradores
 // ============================================================
 
 // ============================================================
@@ -15,7 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../conexao_banco.php';
 
 // ============================================================
-// 2. VERIFICAR LOGIN (NOVO SISTEMA)
+// 2. VERIFICAR LOGIN
 // ============================================================
 
 if (!isLoggedIn()) {
@@ -29,36 +29,37 @@ if (!isLoggedIn()) {
 
 $tipos_permitidos = ['admin_cliente'];
 if (!in_array($_SESSION['tipo_usuario'] ?? '', $tipos_permitidos)) {
-    setMessage('error', 'Acesso negado. Apenas administradores podem excluir usuários.');
+    setMessage('error', 'Acesso negado. Apenas administradores podem excluir profissionais.');
     redirect('listar_usuarios.php');
 }
 
 // ============================================================
-// 4. VARIÁVEIS DO SISTEMA (NOVO)
+// 4. VARIÁVEIS DO SISTEMA
 // ============================================================
 
 $id_cliente = getClienteId();
 $id_usuario_logado = getUsuarioId();
 
 // ============================================================
-// 5. RECEBER ID DO USUÁRIO
+// 5. RECEBER ID DO FUNCIONÁRIO
 // ============================================================
 
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) {
-    setMessage('error', 'ID do usuário inválido.');
+    setMessage('error', 'ID do profissional inválido.');
     redirect('listar_usuarios.php');
 }
 
 // ============================================================
-// 6. VERIFICAR SE O USUÁRIO EXISTE, PERTENCE AO CLIENTE E NÃO É ADMIN
+// 6. VERIFICAR SE O FUNCIONÁRIO EXISTE, PERTENCE AO CLIENTE E NÃO É ADMIN
 // ============================================================
 
 try {
-    $sql = "SELECT id_usuario, nome_usuario, tipo_usuario, status_usuario 
-            FROM usuarios_sistema 
-            WHERE id_usuario = :id 
-            AND id_cliente = :id_cliente";
+    // ✅ USANDO TABELA funcionarios
+    $sql = "SELECT f.id_funcionario, f.nome_funcionario, f.cargo_funcionario, f.status_acesso, f.email_funcionario 
+            FROM funcionarios f
+            WHERE f.id_funcionario = :id 
+            AND f.id_cliente = :id_cliente";
     $stmt = $conn->prepare($sql);
     $stmt->execute([
         ':id' => $id,
@@ -67,24 +68,27 @@ try {
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$usuario) {
-        setMessage('error', 'Usuário não encontrado ou não pertence à sua organização.');
+        setMessage('error', 'Profissional não encontrado ou não pertence à sua organização.');
         redirect('listar_usuarios.php');
     }
 
     // Não permitir excluir administradores
-    if ($usuario['tipo_usuario'] === 'admin_cliente') {
+    if ($usuario['cargo_funcionario'] === 'administrador') {
         setMessage('error', 'Não é possível excluir um administrador.');
         redirect('listar_usuarios.php');
     }
 
     // Não permitir excluir a si mesmo
-    if ($usuario['id_usuario'] == $id_usuario_logado) {
+    if ($usuario['id_funcionario'] == $id_usuario_logado) {
         setMessage('error', 'Você não pode excluir a si mesmo.');
         redirect('listar_usuarios.php');
     }
 
-    // Verificar se o usuário tem dependências (cronograma, etc.)
-    // 6.1 Verificar se o usuário é professor em alguma aula
+    // ============================================================
+    // 6.1 Verificar dependências
+    // ============================================================
+
+    // Verificar se o profissional é professor em alguma aula
     $sqlCheck = "SELECT COUNT(*) FROM cronograma WHERE id_professor = :id_usuario AND id_cliente = :id_cliente";
     $stmtCheck = $conn->prepare($sqlCheck);
     $stmtCheck->execute([
@@ -94,11 +98,11 @@ try {
     $aulas_count = (int)$stmtCheck->fetchColumn();
 
     if ($aulas_count > 0) {
-        setMessage('error', "Não é possível excluir este usuário. Ele é professor em <strong>{$aulas_count} aula(s)</strong>. Remova ou altere o professor das aulas primeiro.");
+        setMessage('error', "Não é possível excluir este profissional. Ele é professor em <strong>{$aulas_count} aula(s)</strong>. Remova ou altere o professor das aulas primeiro.");
         redirect('listar_usuarios.php');
     }
 
-    // 6.2 Verificar se o usuário é docente de algum curso
+    // Verificar se o profissional é docente de algum curso
     $sqlCheck = "SELECT COUNT(*) FROM cursos WHERE id_docente = :id_usuario AND id_cliente = :id_cliente";
     $stmtCheck = $conn->prepare($sqlCheck);
     $stmtCheck->execute([
@@ -108,24 +112,25 @@ try {
     $cursos_count = (int)$stmtCheck->fetchColumn();
 
     if ($cursos_count > 0) {
-        setMessage('error', "Não é possível excluir este usuário. Ele é docente em <strong>{$cursos_count} curso(s)</strong>. Remova ou altere o docente dos cursos primeiro.");
+        setMessage('error', "Não é possível excluir este profissional. Ele é docente em <strong>{$cursos_count} curso(s)</strong>. Remova ou altere o docente dos cursos primeiro.");
         redirect('listar_usuarios.php');
     }
 
 } catch (PDOException $e) {
-    setMessage('error', 'Erro ao verificar usuário: ' . $e->getMessage());
+    setMessage('error', 'Erro ao verificar profissional: ' . $e->getMessage());
     redirect('listar_usuarios.php');
 }
 
 // ============================================================
-// 7. EXCLUIR USUÁRIO
+// 7. EXCLUIR FUNCIONÁRIO
 // ============================================================
 
 try {
     $conn->beginTransaction();
 
-    $sqlDelete = "DELETE FROM usuarios_sistema 
-                  WHERE id_usuario = :id 
+    // ✅ Excluir da tabela funcionarios
+    $sqlDelete = "DELETE FROM funcionarios 
+                  WHERE id_funcionario = :id 
                   AND id_cliente = :id_cliente";
     $stmtDelete = $conn->prepare($sqlDelete);
     $stmtDelete->execute([
@@ -146,7 +151,7 @@ try {
             ip_origem
         ) VALUES (
             :id_funcionario,
-            'usuarios_sistema',
+            'funcionarios',
             :id_registro,
             'DELETE',
             :dados,
@@ -157,10 +162,10 @@ try {
             ':id_funcionario' => $id_usuario_logado,
             ':id_registro' => $id,
             ':dados' => json_encode([
-                'usuario' => $usuario['nome_usuario'],
-                'email' => $usuario['email_usuario'] ?? 'N/A',
-                'tipo' => $usuario['tipo_usuario'],
-                'status' => $usuario['status_usuario']
+                'profissional' => $usuario['nome_funcionario'],
+                'email' => $usuario['email_funcionario'] ?? 'N/A',
+                'cargo' => $usuario['cargo_funcionario'],
+                'status' => $usuario['status_acesso']
             ]),
             ':ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'
         ]);
@@ -171,13 +176,13 @@ try {
 
     $conn->commit();
 
-    setMessage('success', "Usuário <strong>" . htmlspecialchars($usuario['nome_usuario']) . "</strong> excluído com sucesso!");
+    setMessage('success', "Profissional \"" . htmlspecialchars($usuario['nome_funcionario']) . "\" excluído com sucesso!");
 
 } catch (PDOException $e) {
     if (isset($conn) && $conn->inTransaction()) {
         $conn->rollBack();
     }
-    setMessage('error', 'Erro ao excluir usuário: ' . $e->getMessage());
+    setMessage('error', 'Erro ao excluir profissional: ' . $e->getMessage());
 }
 
 // ============================================================
