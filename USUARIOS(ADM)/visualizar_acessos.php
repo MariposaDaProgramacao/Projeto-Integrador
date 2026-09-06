@@ -236,7 +236,7 @@ $titulo = 'Visualizar Acessos - Gerenciamento de Ambientes';
                 <i class="fas fa-building"></i> <?php echo htmlspecialchars($_SESSION['nome_cliente'] ?? ''); ?>
             </span>
             <a href="listar_usuarios.php" class="btn btn-outline">
-                <i class="fas fa-arrow-left"></i> Voltar para listagem
+                <i class="fas fa-arrow-left"></i> Voltar
             </a>
         </div>
     </header>
