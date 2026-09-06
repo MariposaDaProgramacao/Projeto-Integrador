@@ -1,7 +1,7 @@
 <?php
 // ============================================================
-// ARQUIVO: USUARIOS(ADM)/bloquear_usuario.php (MODIFICADO PARA MULTI-TENANT)
-// FUNÇÃO: Bloquear usuário (ativo → bloqueado)
+// ARQUIVO: USUARIOS(ADM)/bloquear_usuario.php
+// FUNÇÃO: Bloquear profissional (funcionarios) - ativo → bloqueado
 // ============================================================
 
 // ============================================================
@@ -15,7 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once __DIR__ . '/../conexao_banco.php';
 
 // ============================================================
-// 2. VERIFICAR LOGIN (NOVO SISTEMA)
+// 2. VERIFICAR LOGIN
 // ============================================================
 
 if (!isLoggedIn()) {
@@ -24,17 +24,17 @@ if (!isLoggedIn()) {
 }
 
 // ============================================================
-// 3. VERIFICAR PERMISSÃO (NOVO SISTEMA)
+// 3. VERIFICAR PERMISSÃO
 // ============================================================
 
 $tipos_permitidos = ['admin_cliente', 'gerente'];
 if (!in_array($_SESSION['tipo_usuario'] ?? '', $tipos_permitidos)) {
-    setMessage('error', 'Acesso negado. Apenas administradores e coordenadores podem bloquear usuários.');
+    setMessage('error', 'Acesso negado. Apenas administradores e coordenadores podem bloquear profissionais.');
     redirect('../AUTENTIFICACAO_ACESSO/dashboard.php');
 }
 
 // ============================================================
-// 4. VARIÁVEIS DO SISTEMA (NOVO)
+// 4. VARIÁVEIS DO SISTEMA
 // ============================================================
 
 $id_cliente = getClienteId();
@@ -58,25 +58,26 @@ if ($id_unidade_usuario == 0 || $id_unidade_usuario === null) {
 }
 
 // ============================================================
-// 5. RECEBER ID DO USUÁRIO
+// 5. RECEBER ID DO PROFISSIONAL
 // ============================================================
 
 $id = (int)($_GET['id'] ?? 0);
 if ($id <= 0) {
-    setMessage('error', 'ID do usuário inválido.');
+    setMessage('error', 'ID do profissional inválido.');
     redirect('listar_usuarios.php');
 }
 
 // ============================================================
-// 6. BUSCAR DADOS DO USUÁRIO (FILTRADO POR CLIENTE)
+// 6. BUSCAR DADOS DO PROFISSIONAL (FILTRADO POR CLIENTE)
 // ============================================================
 
 try {
-    $sql = "SELECT u.*, un.nome_unidade 
-            FROM usuarios_sistema u
-            LEFT JOIN unidades un ON u.id_unidade = un.id_unidade AND un.id_cliente = u.id_cliente
-            WHERE u.id_usuario = :id 
-            AND u.id_cliente = :id_cliente";
+    // ✅ USANDO TABELA funcionarios
+    $sql = "SELECT f.*, u.nome_unidade 
+            FROM funcionarios f
+            LEFT JOIN unidades u ON f.id_unidade = u.id_unidade AND u.id_cliente = f.id_cliente
+            WHERE f.id_funcionario = :id 
+            AND f.id_cliente = :id_cliente";
     $stmt = $conn->prepare($sql);
     $stmt->execute([
         ':id' => $id,
@@ -85,56 +86,57 @@ try {
     $usuario = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$usuario) {
-        setMessage('error', 'Usuário não encontrado ou não pertence à sua organização.');
+        setMessage('error', 'Profissional não encontrado ou não pertence à sua organização.');
         redirect('listar_usuarios.php');
     }
 
-    // Verificar permissão: gerente só pode bloquear usuários da sua unidade
+    // Verificar permissão: gerente só pode bloquear profissionais da sua unidade
     if ($tipo_usuario === 'gerente') {
         if ($usuario['id_unidade'] != $id_unidade_usuario) {
-            setMessage('error', 'Você não tem permissão para bloquear este usuário.');
+            setMessage('error', 'Você não tem permissão para bloquear este profissional.');
             redirect('listar_usuarios.php');
         }
     }
 
     // Verificar se já está bloqueado
-    if ($usuario['status_usuario'] === 'bloqueado') {
-        setMessage('warning', 'Este usuário já está bloqueado.');
+    if ($usuario['status_acesso'] === 'bloqueado') {
+        setMessage('warning', 'Este profissional já está bloqueado.');
         redirect('listar_usuarios.php');
     }
 
-    if ($usuario['status_usuario'] === 'inativo') {
-        setMessage('error', 'Usuários inativos não podem ser bloqueados. Aprove primeiro.');
+    if ($usuario['status_acesso'] === 'inativo') {
+        setMessage('error', 'Profissionais inativos não podem ser bloqueados. Aprove primeiro.');
         redirect('listar_usuarios.php');
     }
 
     // Não permitir bloquear administradores
-    if ($usuario['tipo_usuario'] === 'admin_cliente') {
+    if ($usuario['cargo_funcionario'] === 'administrador') {
         setMessage('error', 'Não é possível bloquear um administrador.');
         redirect('listar_usuarios.php');
     }
 
     // Não permitir bloquear a si mesmo
-    if ($usuario['id_usuario'] == $id_usuario_logado) {
+    if ($usuario['id_funcionario'] == $id_usuario_logado) {
         setMessage('error', 'Você não pode bloquear a si mesmo.');
         redirect('listar_usuarios.php');
     }
 
 } catch (PDOException $e) {
-    setMessage('error', 'Erro ao buscar usuário: ' . $e->getMessage());
+    setMessage('error', 'Erro ao buscar profissional: ' . $e->getMessage());
     redirect('listar_usuarios.php');
 }
 
 // ============================================================
-// 7. BLOQUEAR USUÁRIO
+// 7. BLOQUEAR PROFISSIONAL
 // ============================================================
 
 try {
     $conn->beginTransaction();
 
-    $sqlUpdate = "UPDATE usuarios_sistema 
-                  SET status_usuario = 'bloqueado' 
-                  WHERE id_usuario = :id 
+    // ✅ Atualizar na tabela funcionarios
+    $sqlUpdate = "UPDATE funcionarios 
+                  SET status_acesso = 'bloqueado' 
+                  WHERE id_funcionario = :id 
                   AND id_cliente = :id_cliente";
     $stmtUpdate = $conn->prepare($sqlUpdate);
     $stmtUpdate->execute([
@@ -155,7 +157,7 @@ try {
             ip_origem
         ) VALUES (
             :id_funcionario,
-            'usuarios_sistema',
+            'funcionarios',
             :id_registro,
             'UPDATE',
             :dados,
@@ -166,28 +168,27 @@ try {
             ':id_funcionario' => $id_usuario_logado,
             ':id_registro' => $id,
             ':dados' => json_encode([
-                'usuario' => $usuario['nome_usuario'],
-                'email' => $usuario['email_usuario'],
-                'status_anterior' => $usuario['status_usuario'],
+                'profissional' => $usuario['nome_funcionario'],
+                'email' => $usuario['email_funcionario'],
+                'status_anterior' => $usuario['status_acesso'],
                 'status_novo' => 'bloqueado',
-                'acao' => 'Bloqueio de usuário'
+                'acao' => 'Bloqueio de profissional'
             ]),
             ':ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'
         ]);
     } catch (PDOException $e) {
-        // Não interrompe o processo se falhar o histórico
         error_log('Erro ao registrar bloqueio: ' . $e->getMessage());
     }
 
     $conn->commit();
 
-    setMessage('success', 'Usuário <strong>' . htmlspecialchars($usuario['nome_usuario']) . '</strong> bloqueado com sucesso!');
+    setMessage('success', "Profissional \"" . htmlspecialchars($usuario['nome_funcionario']) . "\" bloqueado com sucesso!");
 
 } catch (PDOException $e) {
     if (isset($conn) && $conn->inTransaction()) {
         $conn->rollBack();
     }
-    setMessage('error', 'Erro ao bloquear usuário: ' . $e->getMessage());
+    setMessage('error', 'Erro ao bloquear profissional: ' . $e->getMessage());
 }
 
 // ============================================================

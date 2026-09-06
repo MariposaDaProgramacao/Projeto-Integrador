@@ -398,3 +398,45 @@
         padding: 8px 10px !important;
     }
 }
+
+/* ======================================================
+   VISUALIZAR ACESSOS - ESTILOS ESPECÍFICOS
+   ====================================================== */
+
+/* Força o main a ter espaço suficiente para todo o conteúdo */
+.main-visualizar {
+    flex: 1 !important;
+    padding: 28px 36px 60px !important;
+    overflow-y: auto !important;
+    background: #f0f4fb !important;
+    display: block !important;
+    min-height: auto !important;
+    height: auto !important;
+}
+
+/* Garante que a tabela não seja cortada */
+.main-visualizar .table-wrapper {
+    margin-bottom: 20px !important;
+    overflow: visible !important;
+}
+
+.main-visualizar .table-scroll {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+/* ======================================================
+   RESPONSIVIDADE PARA VISUALIZAR ACESSOS
+   ====================================================== */
+
+@media (max-width: 768px) {
+    .main-visualizar {
+        padding: 16px 18px 40px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-visualizar {
+        padding: 12px 14px 30px !important;
+    }
+}
