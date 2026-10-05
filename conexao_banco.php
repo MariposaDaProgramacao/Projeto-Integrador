@@ -9,7 +9,7 @@
 // ============================================================
  
 $host = 'localhost';
-$dbname = 'sistemagerenciamentoambientes';
+$dbname = 'projeto_integrador';
 $username = 'root';
 $password = '';
  
