@@ -21,8 +21,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $senha = $_POST['senha'] ?? '';
     
-    if (empty($email) || empty($senha)) {
-        $erro = 'Preencha todos os campos.';
+    // ============================================================
+    // VALIDAÇÕES ESPECÍFICAS (mensagens personalizadas)
+    // ============================================================
+    if (empty($email) && empty($senha)) {
+        $erro = 'Preencha o e-mail e a senha para continuar.';
+    } elseif (empty($email)) {
+        $erro = 'O campo de e-mail é obrigatório.';
+    } elseif (empty($senha)) {
+        $erro = 'O campo de senha é obrigatório.';
+    } elseif (strpos($email, '@') === false) {
+        $erro = 'O e-mail precisa conter o caractere "@". Exemplo: nome@dominio.com';
+    } elseif (substr_count($email, '@') > 1) {
+        $erro = 'O e-mail não pode conter mais de um "@".';
+    } elseif (strpos($email, ' ') !== false) {
+        $erro = 'O e-mail não pode conter espaços.';
+    } elseif (strpos($email, '.') === false) {
+        $erro = 'O e-mail precisa conter um domínio válido. Exemplo: nome@dominio.com';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $erro = 'O e-mail informado não é válido. Verifique e tente novamente.';
+    } elseif (strlen($senha) < 4) {
+        $erro = 'A senha está muito curta.';
     } else {
         try {
             // Buscar usuário na nova tabela
@@ -98,7 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
         } catch (PDOException $e) {
-            $erro = 'Erro ao realizar login: ' . $e->getMessage();
+            // Não expõe detalhes do banco ao usuário — apenas log interno
+            $erro = 'Ocorreu um erro ao tentar fazer login. Tente novamente mais tarde.';
             error_log('Erro no login: ' . $e->getMessage());
         }
     }
@@ -219,6 +239,15 @@ $message = getMessage();
         }
         .login-card .form-group input::placeholder { color: #9aabbf; }
 
+        /* Campo com erro destacado */
+        .login-card .form-group input.input-error {
+            border-color: #e53935;
+            background: #fff5f5;
+        }
+        .login-card .form-group input.input-error:focus {
+            box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.15);
+        }
+
         .login-card .btn {
             width: 100%;
             justify-content: center;
@@ -322,19 +351,22 @@ $message = getMessage();
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="">
+            <form method="POST" action="" novalidate>
                 <div class="form-group">
                     <label for="email"><i class="fas fa-envelope"></i> E-mail</label>
                     <input type="email" name="email" id="email" 
                            placeholder="seu.email@usuario.br" 
                            value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" 
+                           class="<?php echo (!empty($erro) && stripos($erro, 'mail') !== false) ? 'input-error' : ''; ?>"
                            required autofocus>
                 </div>
 
                 <div class="form-group">
                     <label for="senha"><i class="fas fa-lock"></i> Senha</label>
                     <input type="password" name="senha" id="senha" 
-                           placeholder="Digite sua senha" required>
+                           placeholder="Digite sua senha" 
+                           class="<?php echo (!empty($erro) && stripos($erro, 'senha') !== false) ? 'input-error' : ''; ?>"
+                           required>
                 </div>
 
                 <button type="submit" class="btn btn-primary">

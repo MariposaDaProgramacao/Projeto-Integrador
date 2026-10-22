@@ -1,12 +1,3 @@
-<?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-if (isset($_SESSION['usuario_id'])) {
-    header('Location: AUTENTIFICACAO_ACESSO/dashboard.php');
-    exit;
-}
-?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -102,6 +93,11 @@ if (isset($_SESSION['usuario_id'])) {
         .btn-primary:hover {
             background: #1557b0;
             transform: translateY(-1px);
+        }
+
+        /* ===================== BOTÃO LOGIN MOBILE ===================== */
+        .btn-login-mobile {
+            display: none; /* escondido no desktop */
         }
 
         /* ===================== CONTAINER FUNDO ===================== */
@@ -506,7 +502,38 @@ if (isset($_SESSION['usuario_id'])) {
             }
             .sidebar.open { left: 0; }
 
-            .bg-container .main { padding: 20px 14px 60px; }
+            /* Botão de Login flutuante no mobile */
+            .btn-login-mobile {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                position: fixed;
+                top: 16px;
+                right: 16px;
+                z-index: 1000;
+                padding: 12px 22px;
+                background: #1a73e8;
+                color: #ffffff;
+                font-family: 'Inter', sans-serif;
+                font-weight: 600;
+                font-size: 14px;
+                border-radius: 60px;
+                text-decoration: none;
+                box-shadow: 0 8px 20px -6px rgba(26, 115, 232, 0.55);
+                transition: all 0.2s;
+            }
+
+            .btn-login-mobile:active {
+                transform: scale(0.96);
+                background: #1557b0;
+            }
+
+            .btn-login-mobile i {
+                font-size: 14px;
+            }
+
+            .bg-container .main { padding: 80px 14px 60px; }
             .about-card { padding: 28px 20px; border-radius: 18px; }
             .card-title { font-size: 24px; }
             .card-description { font-size: 14px; }
@@ -541,6 +568,11 @@ if (isset($_SESSION['usuario_id'])) {
             </a>
         </div>
     </div>
+
+    <!-- Botão Login flutuante (só aparece no mobile) -->
+    <a href="AUTENTIFICACAO_ACESSO/realizar_login.php" class="btn-login-mobile" aria-label="Login">
+        <i class="fas fa-sign-in-alt"></i> Login
+    </a>
 
     <!-- Container com imagem de fundo -->
     <div class="bg-container">
