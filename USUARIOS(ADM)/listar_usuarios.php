@@ -1,5 +1,6 @@
 <head>
     <link rel="stylesheet" href="usuarios_adm.css">
+    <link rel="stylesheet" href="usuarios_adm_responsivo.css">
 </head>
 
 <?php

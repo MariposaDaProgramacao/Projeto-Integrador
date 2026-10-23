@@ -70,6 +70,13 @@ function isActive($condicao) {
     return $condicao ? 'active' : '';
 }
 ?>
+
+<!-- Botão Hamburger e Overlay -->
+<button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">
+    <i class="fas fa-bars"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <aside class="sidebar">
     <div class="logo-area">
         <div class="logo-icon">
@@ -85,14 +92,14 @@ function isActive($condicao) {
         <div class="menu-label">Navegação</div>
         
         <!-- Dashboard -->
-        <a href="../AUTENTIFICACAO_ACESSO/dashboard.php" class="menu-item-link <?php echo $is_dashboard ? 'active' : ''; ?>">
+        <a href="../AUTENTIFICACAO_ACESSO/dashboard.php" class="menu-item <?php echo $is_dashboard ? 'active' : ''; ?>">
             <i class="fas fa-chart-pie"></i>
             <span>Dashboard</span>
         </a>
         
         <!-- USUÁRIOS (apenas admin) -->
         <?php if ($is_admin): ?>
-            <a href="../USUARIOS(ADM)/listar_usuarios.php" class="menu-item-link <?php echo $is_usuarios ? 'active' : ''; ?>">
+            <a href="../USUARIOS(ADM)/listar_usuarios.php" class="menu-item <?php echo $is_usuarios ? 'active' : ''; ?>">
                 <i class="fas fa-users"></i>
                 <span>Usuários</span>
             </a>
@@ -100,7 +107,7 @@ function isActive($condicao) {
         
         <!-- Unidades (admin e gerente) -->
         <?php if ($pode_gerenciar): ?>
-            <a href="../UNIDADES/listar_unidade.php" class="menu-item-link <?php echo $is_unidades ? 'active' : ''; ?>">
+            <a href="../UNIDADES/listar_unidade.php" class="menu-item <?php echo $is_unidades ? 'active' : ''; ?>">
                 <i class="fas fa-building"></i>
                 <span>Unidades</span>
             </a>
@@ -108,26 +115,26 @@ function isActive($condicao) {
         
         <!-- Cursos (admin e gerente) -->
         <?php if ($pode_gerenciar): ?>
-            <a href="../CURSOS/listar_cursos.php" class="menu-item-link <?php echo $is_cursos ? 'active' : ''; ?>">
+            <a href="../CURSOS/listar_cursos.php" class="menu-item <?php echo $is_cursos ? 'active' : ''; ?>">
                 <i class="fas fa-graduation-cap"></i>
                 <span>Cursos</span>
             </a>
         <?php endif; ?>
         
         <!-- Salas (todos os tipos) -->
-        <a href="../SALAS/listar_salas.php" class="menu-item-link <?php echo $is_salas ? 'active' : ''; ?>">
+        <a href="../SALAS/listar_salas.php" class="menu-item <?php echo $is_salas ? 'active' : ''; ?>">
             <i class="fas fa-door-open"></i>
             <span>Salas</span>
         </a>
         
         <!-- Cronograma -->
-        <a href="../CRONOGRAMA_AULAS/listar_aulas.php" class="menu-item-link <?php echo $is_cronograma ? 'active' : ''; ?>">
+        <a href="../CRONOGRAMA_AULAS/listar_aulas.php" class="menu-item <?php echo $is_cronograma ? 'active' : ''; ?>">
             <i class="fas fa-calendar-alt"></i>
             <span>Cronograma</span>
         </a>
         
         <!-- Mapa de Ocupação -->
-        <a href="../MAPA/mapa_salas_dia.php" class="menu-item-link <?php echo $is_mapa ? 'active' : ''; ?>">
+        <a href="../MAPA/mapa_salas_dia.php" class="menu-item <?php echo $is_mapa ? 'active' : ''; ?>">
             <i class="fas fa-map"></i>
             <span>Mapa de Ocupação</span>
             <span class="badge-menu">novo</span>
@@ -135,7 +142,7 @@ function isActive($condicao) {
 
         <!-- RECESSOS (admin e gerente) -->
         <?php if ($pode_gerenciar): ?>
-            <a href="../RECESSOS/listar_recesso.php" class="menu-item-link <?php echo $is_recessos ? 'active' : ''; ?>">
+            <a href="../RECESSOS/listar_recesso.php" class="menu-item <?php echo $is_recessos ? 'active' : ''; ?>">
                 <i class="fas fa-calendar-minus"></i>
                 <span>Registrar Recesso</span>
             </a>
@@ -144,7 +151,7 @@ function isActive($condicao) {
         <div class="menu-label">Configurações</div>
         
         <!-- Alterar Senha -->
-        <a href="../AUTENTIFICACAO_ACESSO/resetar_senha.php" class="menu-item-link <?php echo $is_resetar_senha ? 'active' : ''; ?>">
+        <a href="../AUTENTIFICACAO_ACESSO/resetar_senha.php" class="menu-item <?php echo $is_resetar_senha ? 'active' : ''; ?>">
             <i class="fas fa-key"></i>
             <span>Alterar Senha</span>
         </a>
@@ -177,3 +184,129 @@ function isActive($condicao) {
         </a>
     </div>
 </aside>
+
+<!-- ======================================================== -->
+<!-- CSS FORÇADO PARA O VISUAL "CARTÃO" DOS LINKS DO MENU      -->
+<!-- ======================================================== -->
+<style>
+    /* Usamos seletores mais específicos e !important em tudo */
+    body aside.sidebar nav.sidebar-menu a.menu-item,
+    body .sidebar nav.sidebar-menu a.menu-item,
+    .sidebar .menu-item {
+        background: #f8faff !important;
+        padding: 14px 16px !important;
+        border-radius: 12px !important;
+        border: 1px solid #eef3fa !important;
+        margin-bottom: 8px !important;
+        color: #1a2639 !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        text-align: left !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 14px !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02) !important;
+    }
+
+    body aside.sidebar nav.sidebar-menu a.menu-item:hover,
+    body .sidebar nav.sidebar-menu a.menu-item:hover,
+    .sidebar .menu-item:hover {
+        background: #e3f2fd !important;
+        border-color: #1a73e8 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.15) !important;
+    }
+
+    body aside.sidebar nav.sidebar-menu a.menu-item i,
+    body .sidebar nav.sidebar-menu a.menu-item i,
+    .sidebar .menu-item i {
+        color: #8a9bb5 !important;
+        font-size: 16px !important;
+        width: 20px !important;
+        text-align: center !important;
+    }
+
+    body aside.sidebar nav.sidebar-menu a.menu-item:hover i,
+    body .sidebar nav.sidebar-menu a.menu-item:hover i,
+    .sidebar .menu-item:hover i {
+        color: #1a73e8 !important;
+    }
+
+    /* Item ativo com fundo azul e texto branco */
+    body aside.sidebar nav.sidebar-menu a.menu-item.active,
+    body .sidebar nav.sidebar-menu a.menu-item.active,
+    .sidebar .menu-item.active {
+        background: #1a73e8 !important;
+        border-color: #1a73e8 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3) !important;
+    }
+    body aside.sidebar nav.sidebar-menu a.menu-item.active i,
+    body .sidebar nav.sidebar-menu a.menu-item.active i,
+    .sidebar .menu-item.active i {
+        color: #ffffff !important;
+    }
+</style>
+<!-- ======================================================== -->
+
+<!-- Script do Menu Mobile -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggle  = document.getElementById('menuToggle');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        let sidebar = document.querySelector('.sidebar');
+        if (!sidebar) {
+            const children = Array.from(document.body.children);
+            sidebar = children.find(el => 
+                (el.tagName === 'ASIDE' || el.tagName === 'DIV') && 
+                !el.classList.contains('sidebar-overlay') && 
+                !el.classList.contains('menu-toggle')
+            );
+        }
+
+        if (!toggle || !overlay || !sidebar) return;
+
+        function abrirMenu() {
+            sidebar.style.setProperty('display', 'flex', 'important');
+            sidebar.style.setProperty('position', 'fixed', 'important');
+            sidebar.style.setProperty('left', '0', 'important');
+            sidebar.style.setProperty('top', '0', 'important');
+            sidebar.style.setProperty('z-index', '999', 'important');
+            sidebar.style.setProperty('width', '280px', 'important');
+            sidebar.style.setProperty('height', '100vh', 'important');
+            
+            overlay.classList.add('active');
+            document.body.classList.add('menu-open');
+        }
+
+        function fecharMenu() {
+            sidebar.style.setProperty('left', '-300px', 'important');
+            overlay.classList.remove('active');
+            document.body.classList.remove('menu-open');
+        }
+
+        if (window.innerWidth <= 820) {
+            fecharMenu();
+        }
+
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (sidebar.style.left === '0px' || sidebar.style.left === '0') {
+                fecharMenu();
+            } else {
+                abrirMenu();
+            }
+        });
+
+        overlay.addEventListener('click', fecharMenu);
+
+        sidebar.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 820) fecharMenu();
+            });
+        });
+    });
+</script>
