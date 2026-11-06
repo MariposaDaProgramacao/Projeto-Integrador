@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 03/11/2026 às 15:16
--- Versão do servidor: 10.4.32-MariaDB
--- Versão do PHP: 8.2.12
+-- Tempo de geração: 06-Nov-2026 às 15:31
+-- Versão do servidor: 10.4.19-MariaDB
+-- versão do PHP: 8.0.7
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,21 +24,21 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `clientes`
+-- Estrutura da tabela `clientes`
 --
 
 CREATE TABLE `clientes` (
   `id_cliente` int(11) NOT NULL,
-  `nome_cliente` varchar(100) NOT NULL,
-  `tipo_cliente` enum('escola','salão','empresa','outro') NOT NULL,
-  `cnpj_cliente` varchar(18) DEFAULT NULL,
-  `email_cliente` varchar(100) NOT NULL,
-  `telefone_cliente` varchar(15) DEFAULT NULL,
-  `endereco_cliente` varchar(200) DEFAULT NULL,
-  `cidade_cliente` varchar(80) DEFAULT NULL,
-  `estado_cliente` char(2) DEFAULT NULL,
-  `status_cliente` enum('ativo','inativo','pendente','bloqueado') NOT NULL DEFAULT 'pendente',
-  `plano_cliente` enum('gratuito','basico','profissional','enterprise') NOT NULL DEFAULT 'gratuito',
+  `nome_cliente` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_cliente` enum('escola','salão','empresa','outro') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cnpj_cliente` varchar(18) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email_cliente` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `telefone_cliente` varchar(15) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `endereco_cliente` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cidade_cliente` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `estado_cliente` char(2) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status_cliente` enum('ativo','inativo','pendente','bloqueado') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pendente',
+  `plano_cliente` enum('gratuito','basico','profissional','enterprise') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'gratuito',
   `data_cadastro` datetime NOT NULL DEFAULT current_timestamp(),
   `data_vencimento` date DEFAULT NULL,
   `limite_unidades` int(11) DEFAULT 1,
@@ -46,28 +46,21 @@ CREATE TABLE `clientes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Despejando dados para a tabela `clientes`
+-- Extraindo dados da tabela `clientes`
 --
 
 INSERT INTO `clientes` (`id_cliente`, `nome_cliente`, `tipo_cliente`, `cnpj_cliente`, `email_cliente`, `telefone_cliente`, `endereco_cliente`, `cidade_cliente`, `estado_cliente`, `status_cliente`, `plano_cliente`, `data_cadastro`, `data_vencimento`, `limite_unidades`, `limite_usuarios`) VALUES
-(1, 'Cliente Padrão', 'outro', NULL, 'padrao@cliente.com', NULL, NULL, NULL, NULL, 'ativo', 'gratuito', '2026-09-02 10:05:43', NULL, 1, 5),
-(2, 'Escola Educação Integral', 'escola', '12.345.678/0001-90', 'contato@escolaintegral.com.br', '(11) 3333-4444', 'Av. Paulista, 1000', 'São Paulo', 'SP', 'ativo', 'profissional', '2026-09-04 09:57:08', '2027-09-04', 3, 15),
-(3, 'Salão Beleza & Estilo', 'salão', '98.765.432/0001-10', 'contato@belezastilo.com.br', '(21) 2222-3333', 'Rua das Flores, 500', 'Rio de Janeiro', 'RJ', 'ativo', 'basico', '2026-09-04 09:57:08', '2027-03-03', 1, 5),
-(4, 'Tech Solutions Brasil', 'empresa', '45.678.912/0001-20', 'rh@techsolutions.com.br', '(41) 4444-5555', 'Av. Getúlio Vargas, 2000', 'Curitiba', 'PR', 'ativo', 'enterprise', '2026-09-04 09:57:08', '2027-09-04', 5, 25),
-(5, 'ONG Educação para Todos', 'outro', '78.912.345/0001-30', 'contato@educacaoparatodos.org', '(31) 5555-6666', 'Rua da Solidariedade, 150', 'Belo Horizonte', 'MG', 'pendente', 'gratuito', '2026-09-04 09:57:08', NULL, 1, 5),
-(6, 'Escola Saber e Conhecimento', 'escola', '34.567.891/0001-40', 'contato@sabereconhecimento.com', '(81) 6666-7777', 'Av. Recife, 300', 'Recife', 'PE', 'inativo', 'basico', '2026-09-04 09:57:08', '2026-08-05', 2, 8),
-(7, 'Salão Cabelo Perfeito', 'salão', '56.789.123/0001-50', 'contato@cabeloperfeito.com', '(71) 7777-8888', 'Rua Salvador, 200', 'Salvador', 'BA', 'bloqueado', 'profissional', '2026-09-04 09:57:08', '2026-12-03', 2, 10),
-(8, 'Inovação Tech Educação', 'empresa', '67.891.234/0001-60', 'contato@inovacaotech.com.br', '(61) 8888-9999', 'Av. Brasília, 500', 'Brasília', 'DF', 'ativo', 'enterprise', '2026-09-04 09:57:08', '2027-09-04', 10, 50);
+(10, 'Escola de Programação', 'outro', '12.345.678/9999-99', 'shanayaflocos@gmail.com', '(31) 91234-5678', 'Rua do Encanto Esquina Virada da Felicidade', 'Belo Horizonte', 'MG', 'ativo', 'gratuito', '2026-11-06 10:17:51', NULL, 3, 10);
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `configuracoes_turnos`
+-- Estrutura da tabela `configuracoes_turnos`
 --
 
 CREATE TABLE `configuracoes_turnos` (
   `id_config` int(11) NOT NULL,
-  `turno` varchar(10) NOT NULL,
+  `turno` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
   `horario_inicio` time NOT NULL,
   `horario_fim` time NOT NULL,
   `intervalo_inicio` time DEFAULT NULL,
@@ -75,7 +68,7 @@ CREATE TABLE `configuracoes_turnos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Despejando dados para a tabela `configuracoes_turnos`
+-- Extraindo dados da tabela `configuracoes_turnos`
 --
 
 INSERT INTO `configuracoes_turnos` (`id_config`, `turno`, `horario_inicio`, `horario_fim`, `intervalo_inicio`, `intervalo_fim`) VALUES
@@ -86,7 +79,7 @@ INSERT INTO `configuracoes_turnos` (`id_config`, `turno`, `horario_inicio`, `hor
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `cronograma`
+-- Estrutura da tabela `cronograma`
 --
 
 CREATE TABLE `cronograma` (
@@ -97,172 +90,84 @@ CREATE TABLE `cronograma` (
   `id_professor` int(11) DEFAULT 0,
   `dias_letivos` int(11) DEFAULT NULL,
   `data_aula` date NOT NULL,
-  `turno` enum('manha','tarde','noite') NOT NULL,
+  `turno` enum('manha','tarde','noite') COLLATE utf8mb4_unicode_ci NOT NULL,
   `horario_inicio` time NOT NULL,
   `horario_fim` time NOT NULL,
-  `status_aula` enum('agendada','realizada','cancelada','remarcada','aguardando_remarcacao') NOT NULL DEFAULT 'agendada',
-  `observacao` text DEFAULT NULL,
+  `status_aula` enum('agendada','realizada','cancelada','remarcada','aguardando_remarcacao') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'agendada',
+  `observacao` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `id_cliente` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `cronograma`
---
-
-INSERT INTO `cronograma` (`id_aula`, `id_sala`, `id_curso`, `id_unidade`, `id_professor`, `dias_letivos`, `data_aula`, `turno`, `horario_inicio`, `horario_fim`, `status_aula`, `observacao`, `id_cliente`) VALUES
-(2006, 3, 1, 1, 2, 1, '2026-09-01', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 1 - Introdução ao HTML/CSS', 1),
-(2007, 3, 1, 1, 2, 2, '2026-09-02', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 2 - JavaScript Básico', 1),
-(2008, 3, 1, 1, 2, 3, '2026-09-03', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 3 - Frameworks Front-end', 1),
-(2009, 3, 1, 1, 2, 4, '2026-09-04', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 4 - Back-end com Node.js', 1),
-(2010, 3, 1, 1, 2, 5, '2026-09-07', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 5 - Banco de Dados', 1),
-(2011, 4, 2, 1, 3, 1, '2026-09-01', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 1 - Introdução à Análise de Sistemas', 1),
-(2012, 4, 2, 1, 3, 2, '2026-09-02', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 2 - Engenharia de Software', 1),
-(2013, 4, 2, 1, 3, 3, '2026-09-03', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 3 - UML e Modelagem', 1),
-(2014, 4, 2, 1, 3, 4, '2026-09-04', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 4 - Metodologias Ágeis', 1),
-(2015, 4, 2, 1, 3, 5, '2026-09-07', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 5 - Gestão de Projetos', 1),
-(2016, 7, 3, 1, 4, 1, '2026-09-05', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 1 - Fundamentos de IA', 1),
-(2017, 7, 3, 1, 4, 2, '2026-09-07', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 2 - Machine Learning', 1),
-(2018, 7, 3, 1, 4, 3, '2026-09-09', 'noite', '19:00:00', '22:30:00', 'agendada', 'Aula 3 - Deep Learning', 1),
-(2019, 5, 4, 1, 2, 1, '2026-09-10', '', '08:00:00', '17:00:00', 'agendada', 'Aula 1 - Fundamentos Scrum', 1),
-(2020, 5, 4, 1, 2, 2, '2026-09-11', '', '08:00:00', '17:00:00', 'agendada', 'Aula 2 - Papéis e Cerimônias', 1),
-(2021, 5, 4, 1, 2, 3, '2026-09-14', '', '08:00:00', '17:00:00', 'agendada', 'Aula 3 - Planejamento e Estimativas', 1),
-(2022, 5, 4, 1, 2, 4, '2026-09-15', '', '08:00:00', '17:00:00', 'agendada', 'Aula 4 - Práticas Avançadas', 1),
-(2023, 6, 5, 1, 4, 1, '2026-09-01', 'tarde', '13:00:00', '17:00:00', 'agendada', 'Aula 1 - Conceitos de Redes', 1),
-(2024, 6, 5, 1, 4, 2, '2026-09-02', 'tarde', '13:00:00', '17:00:00', 'agendada', 'Aula 2 - Modelo OSI', 1),
-(2025, 6, 5, 1, 4, 3, '2026-09-03', 'tarde', '13:00:00', '17:00:00', 'agendada', 'Aula 3 - Protocolos TCP/IP', 1),
-(2026, 6, 5, 1, 4, 4, '2026-09-04', 'tarde', '13:00:00', '17:00:00', 'agendada', 'Aula 4 - Roteamento', 1),
-(2027, 3, 6, 1, 3, 1, '2026-09-12', '', '08:00:00', '17:00:00', 'agendada', 'Aula 1 - Introdução ao DevOps', 1),
-(2028, 3, 6, 1, 3, 2, '2026-09-13', '', '08:00:00', '17:00:00', 'agendada', 'Aula 2 - CI/CD', 1),
-(2029, 3, 6, 1, 3, 3, '2026-09-16', '', '08:00:00', '17:00:00', 'agendada', 'Aula 3 - Containers e Docker', 1),
-(2030, 3, 6, 1, 3, 4, '2026-09-17', '', '08:00:00', '17:00:00', 'agendada', 'Aula 4 - Orquestração', 1);
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `cursos`
+-- Estrutura da tabela `cursos`
 --
 
 CREATE TABLE `cursos` (
   `id_curso` int(11) NOT NULL,
   `id_unidade` int(11) NOT NULL,
   `id_docente` int(11) DEFAULT NULL,
-  `numero_curso` varchar(20) NOT NULL,
-  `nome_curso` varchar(100) NOT NULL,
+  `numero_curso` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nome_curso` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `carga_horaria_curso` int(11) NOT NULL,
   `horas_por_dia` int(11) NOT NULL DEFAULT 4,
-  `tipo_sala_preferencial` varchar(100) DEFAULT NULL,
+  `tipo_sala_preferencial` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `data_inicio_curso` date NOT NULL,
   `data_fim_curso_calculada` date DEFAULT NULL,
   `dias_letivos` int(11) DEFAULT NULL,
-  `turno_curso` enum('manha','tarde','noite','integral') NOT NULL,
-  `dias_semana` set('segunda','terca','quarta','quinta','sexta','sabado') NOT NULL,
-  `tipo_curso` enum('curso_agil','curso_tecnico','pos_graduacao') NOT NULL,
-  `status_curso` enum('ativo','inativo','concluido') NOT NULL DEFAULT 'ativo',
+  `turno_curso` enum('manha','tarde','noite','integral') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dias_semana` set('segunda','terca','quarta','quinta','sexta','sabado') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_curso` enum('curso_agil','curso_tecnico','pos_graduacao') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status_curso` enum('ativo','inativo','concluido') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ativo',
   `percentual_conclusao` decimal(5,2) DEFAULT 0.00,
   `id_cliente` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Despejando dados para a tabela `cursos`
---
-
-INSERT INTO `cursos` (`id_curso`, `id_unidade`, `id_docente`, `numero_curso`, `nome_curso`, `carga_horaria_curso`, `horas_por_dia`, `tipo_sala_preferencial`, `data_inicio_curso`, `data_fim_curso_calculada`, `dias_letivos`, `turno_curso`, `dias_semana`, `tipo_curso`, `status_curso`, `percentual_conclusao`, `id_cliente`) VALUES
-(30, 1, 2, 'TEC001', 'Desenvolvimento Web Full Stack', 400, 4, 'laboratorio', '2026-09-01', '2026-12-20', 100, 'noite', 'segunda,terca,quarta,quinta,sexta', 'curso_tecnico', 'ativo', 0.00, 1),
-(31, 1, 3, 'TEC002', 'Análise e Desenvolvimento de Sistemas', 360, 4, 'laboratorio', '2026-09-01', '2026-12-15', 90, 'noite', 'segunda,terca,quarta,quinta,sexta', 'curso_tecnico', 'ativo', 0.00, 1),
-(32, 1, 4, 'POS001', 'Pós-Graduação em IA e Machine Learning', 240, 4, 'sala_aula', '2026-09-05', '2026-12-10', 60, 'noite', 'segunda,quarta,sexta', 'pos_graduacao', 'ativo', 0.00, 1),
-(33, 1, 2, 'AGIL001', 'Scrum Master Avançado', 40, 8, 'sala_aula', '2026-09-10', '2026-09-15', 5, 'integral', 'segunda,terca,quarta,quinta,sexta', 'curso_agil', 'ativo', 0.00, 1),
-(34, 1, 4, 'TEC003', 'Redes de Computadores', 320, 4, 'laboratorio', '2026-09-01', '2026-12-20', 80, 'tarde', 'segunda,terca,quarta,quinta,sexta', 'curso_tecnico', 'ativo', 0.00, 1),
-(35, 1, 3, 'AGIL002', 'DevOps Essentials', 40, 8, 'laboratorio', '2026-09-12', '2026-09-17', 5, 'integral', 'segunda,terca,quarta,quinta,sexta', 'curso_agil', 'ativo', 0.00, 1);
-
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `funcionarios`
+-- Estrutura da tabela `funcionarios`
 --
 
 CREATE TABLE `funcionarios` (
   `id_funcionario` int(11) NOT NULL,
   `id_cliente` int(11) NOT NULL,
-  `nome_funcionario` varchar(100) NOT NULL,
-  `cargo_funcionario` enum('administrador','coordenador','professor','auxiliar','gerente','secretaria','portaria') NOT NULL,
+  `nome_funcionario` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cargo_funcionario` enum('administrador','coordenador','professor','auxiliar','gerente','secretaria','portaria') COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_unidade` int(11) DEFAULT NULL,
-  `email_funcionario` varchar(100) NOT NULL,
-  `telefone_funcionario` varchar(15) DEFAULT NULL,
-  `senha_funcionario` varchar(255) NOT NULL,
-  `status_acesso` enum('ativo','inativo','bloqueado') NOT NULL DEFAULT 'inativo',
+  `email_funcionario` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `telefone_funcionario` varchar(15) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `senha_funcionario` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status_acesso` enum('ativo','inativo','bloqueado') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'inativo',
   `data_ultimo_acesso` datetime DEFAULT NULL,
   `tentativas_login` int(11) NOT NULL DEFAULT 0,
   `data_cadastro_funcionario` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Despejando dados para a tabela `funcionarios`
---
-
-INSERT INTO `funcionarios` (`id_funcionario`, `id_cliente`, `nome_funcionario`, `cargo_funcionario`, `id_unidade`, `email_funcionario`, `telefone_funcionario`, `senha_funcionario`, `status_acesso`, `data_ultimo_acesso`, `tentativas_login`, `data_cadastro_funcionario`) VALUES
-(16, 1, 'Carlos Alberto Silva', 'administrador', 3, 'carlos.admin@unidade.com', '(31) 98888-7777', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ativo', '2026-09-04 08:30:00', 0, '2026-09-04 09:55:36'),
-(17, 1, 'Mariana Oliveira Santos', 'coordenador', 3, 'mariana.coordenadora@unidade.com', '(31) 97777-6666', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ativo', '2026-09-03 16:20:00', 0, '2026-09-04 09:55:36'),
-(18, 1, 'João Pedro Mendes', 'professor', 3, 'joao.professor@unidade.com', '(31) 96666-5555', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ativo', '2026-09-04 07:45:00', 0, '2026-09-04 09:55:36'),
-(20, 1, 'Roberto Fernandes Lima', 'professor', 3, 'roberto.professor@unidade.com', '(31) 94444-3333', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ativo', '2026-09-02 19:30:00', 0, '2026-09-04 09:55:36'),
-(21, 1, 'Patrícia Souza Costa', 'secretaria', 3, 'patricia.secretaria@unidade.com', '(31) 93333-2222', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ativo', '2026-09-04 09:00:00', 0, '2026-09-04 09:55:36'),
-(22, 1, 'Fernando Almeida Rocha', 'gerente', 3, 'fernando.gerente@unidade.com', '(31) 92222-1111', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ativo', '2026-09-03 18:45:00', 0, '2026-09-04 09:55:36'),
-(23, 1, 'Luciana Martins Pereira', 'auxiliar', 3, 'luciana.auxiliar@unidade.com', '(31) 91111-0000', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ativo', '2026-09-03 11:30:00', 0, '2026-09-04 09:55:36'),
-(24, 1, 'José Antônio Rodrigues', 'portaria', 3, 'jose.portaria@unidade.com', '(31) 90000-9999', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ativo', '2026-09-04 06:00:00', 0, '2026-09-04 09:55:36'),
-(27, 1, 'Marcos Vinícius Santos', 'professor', 3, 'marcos.inativo@unidade.com', '(31) 96666-7777', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'inativo', NULL, 0, '2026-09-04 09:55:36'),
-(28, 1, 'Juliana Ferreira Lima', 'secretaria', 3, 'juliana.inativa@unidade.com', '(31) 95555-6666', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'inativo', NULL, 0, '2026-09-04 09:55:36'),
-(29, 1, 'Pedro Augusto Gomes', 'professor', 3, 'pedro.bloqueado@unidade.com', '(31) 94444-5555', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'bloqueado', '2026-08-30 10:00:00', 3, '2026-09-04 09:55:36');
-
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `historico_sistema`
+-- Estrutura da tabela `historico_sistema`
 --
 
 CREATE TABLE `historico_sistema` (
   `id_historico` int(11) NOT NULL,
   `id_funcionario` int(11) NOT NULL,
-  `tabela_afetada` varchar(50) NOT NULL,
+  `tabela_afetada` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_registro_afetado` int(11) NOT NULL,
-  `acao` varchar(20) NOT NULL,
+  `acao` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `dados_anteriores` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `dados_novos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `motivo` varchar(200) DEFAULT NULL,
+  `motivo` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `data_acao` datetime NOT NULL DEFAULT current_timestamp(),
-  `ip_origem` varchar(45) DEFAULT NULL
+  `ip_origem` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `historico_sistema`
---
-
-INSERT INTO `historico_sistema` (`id_historico`, `id_funcionario`, `tabela_afetada`, `id_registro_afetado`, `acao`, `dados_anteriores`, `dados_novos`, `motivo`, `data_acao`, `ip_origem`) VALUES
-(10, 1, 'cursos', 1, 'INSERT', NULL, 'Curso TEC001 criado', 'Criação do curso Desenvolvimento Web', '2026-09-02 09:51:24', '192.168.1.100'),
-(11, 1, 'salas', 1, 'INSERT', NULL, 'Sala 101 cadastrada', 'Cadastro de sala de aula', '2026-09-02 09:51:24', '192.168.1.100'),
-(12, 1, 'funcionarios', 2, 'INSERT', NULL, 'João Silva cadastrado como professor', 'Cadastro de novo professor', '2026-09-02 09:51:24', '192.168.1.100'),
-(13, 1, 'cronograma', 1, 'INSERT', NULL, 'Aula 1 - TEC001 agendada', 'Agendamento de aula', '2026-09-02 09:51:24', '192.168.1.100'),
-(14, 1, 'funcionarios', 15, 'INSERT', NULL, NULL, 'Cadastro de novo usuário: Shanaya Nataly', '2026-09-02 09:51:42', '::1'),
-(15, 15, 'funcionarios', 15, 'UPDATE', NULL, NULL, 'Alteração de senha', '2026-09-02 09:55:30', '::1'),
-(16, 1, 'usuarios_sistema', 1, 'login', NULL, '{\"usuario\":\"Administrador Sistema\",\"email\":\"admin@senac.br\",\"cliente\":\"Cliente Padr\\u00e3o\"}', NULL, '2026-09-03 09:26:18', '::1'),
-(17, 1, 'usuarios_sistema', 1, 'login', NULL, '{\"usuario\":\"Administrador Sistema\",\"email\":\"admin@senac.br\",\"cliente\":\"Cliente Padr\\u00e3o\"}', NULL, '2026-09-03 09:26:29', '::1'),
-(18, 1, 'usuarios_sistema', 1, 'login', NULL, '{\"usuario\":\"Administrador Sistema\",\"email\":\"admin@senac.br\",\"cliente\":\"Cliente Padr\\u00e3o\"}', NULL, '2026-09-03 09:26:45', '::1'),
-(19, 1, 'usuarios_sistema', 1, 'logout', NULL, '{\"usuario\":\"Administrador Sistema\",\"cliente_id\":1,\"data_saida\":\"2026-09-04 14:45:15\"}', NULL, '2026-09-04 09:45:15', '::1'),
-(20, 1, 'funcionarios', 19, 'UPDATE', NULL, '{\"profissional\":\"Ana Carolina Ribeiro\",\"status_anterior\":\"ativo\",\"status_novo\":\"bloqueado\",\"acao\":\"Bloqueio\"}', NULL, '2026-09-04 11:36:14', '::1'),
-(21, 1, 'funcionarios', 19, 'UPDATE', NULL, '{\"profissional\":\"Ana Carolina Ribeiro\",\"status_anterior\":\"bloqueado\",\"status_novo\":\"ativo\",\"acao\":\"Desbloqueio\"}', NULL, '2026-09-04 11:36:20', '::1'),
-(22, 1, 'funcionarios', 19, 'UPDATE', NULL, '{\"profissional\":\"Ana Carolina Ribeiro\",\"email\":\"ana.professora@unidade.com\",\"cargo_anterior\":\"professor\",\"cargo_novo\":\"auxiliar\",\"status_anterior\":\"ativo\",\"status_novo\":\"ativo\"}', NULL, '2026-09-04 11:36:31', '::1'),
-(23, 1, 'funcionarios', 19, 'UPDATE', NULL, '{\"profissional\":\"Ana Carolina Ribeiro\",\"email\":\"ana.professora@unidade.com\",\"cargo_anterior\":\"auxiliar\",\"cargo_novo\":\"professor\",\"status_anterior\":\"ativo\",\"status_novo\":\"ativo\"}', NULL, '2026-09-04 11:36:37', '::1'),
-(24, 1, 'funcionarios', 19, 'UPDATE', NULL, '{\"acao\":\"Redefini\\u00e7\\u00e3o de senha\",\"profissional\":\"Ana Carolina Ribeiro\",\"email\":\"ana.professora@unidade.com\"}', NULL, '2026-09-04 11:40:52', '::1'),
-(25, 1, 'funcionarios', 19, 'DELETE', '{\"profissional\":\"Ana Carolina Ribeiro\",\"email\":\"ana.professora@unidade.com\",\"cargo\":\"professor\",\"status\":\"ativo\"}', NULL, NULL, '2026-09-04 11:42:39', '::1'),
-(26, 1, 'funcionarios', 25, 'DELETE', '{\"profissional\":\"Camila Batista Nunes\",\"email\":\"camila.professora@unidade.com\",\"cargo\":\"professor\",\"status\":\"ativo\"}', NULL, NULL, '2026-09-04 11:43:19', '::1'),
-(27, 1, 'funcionarios', 26, 'DELETE', '{\"profissional\":\"Daniel Carvalho Mota\",\"email\":\"daniel.professor@unidade.com\",\"cargo\":\"professor\",\"status\":\"ativo\"}', NULL, NULL, '2026-09-04 11:47:15', '::1'),
-(28, 1, 'usuarios_sistema', 1, 'logout', NULL, '{\"usuario\":\"Desconhecido\",\"cliente_id\":null,\"data_saida\":\"2026-10-22 15:58:15\"}', NULL, '2026-10-22 10:58:15', '::1'),
-(29, 1, 'usuarios_sistema', 1, 'logout', NULL, '{\"usuario\":\"Administrador Sistema\",\"cliente_id\":1,\"data_saida\":\"2026-10-22 16:47:00\"}', NULL, '2026-10-22 11:47:00', '::1'),
-(30, 1, 'usuarios_sistema', 1, 'logout', NULL, '{\"usuario\":\"Administrador Sistema\",\"cliente_id\":1,\"data_saida\":\"2026-10-23 14:48:25\"}', NULL, '2026-10-23 09:48:25', '::1'),
-(31, 1, 'usuarios_sistema', 1, 'logout', NULL, '{\"usuario\":\"Administrador Sistema\",\"cliente_id\":1,\"data_saida\":\"2026-10-23 16:25:15\"}', NULL, '2026-10-23 11:25:15', '::1');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `manutencoes`
+-- Estrutura da tabela `manutencoes`
 --
 
 CREATE TABLE `manutencoes` (
@@ -270,25 +175,16 @@ CREATE TABLE `manutencoes` (
   `id_sala` int(11) NOT NULL,
   `data_inicio` date NOT NULL,
   `data_fim` date NOT NULL,
-  `turno` enum('manha','tarde','noite','integral') NOT NULL,
-  `motivo` varchar(200) NOT NULL,
-  `status` enum('agendada','em_andamento','concluida') NOT NULL DEFAULT 'agendada',
+  `turno` enum('manha','tarde','noite','integral') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `motivo` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `status` enum('agendada','em_andamento','concluida') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'agendada',
   `id_cliente` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `manutencoes`
---
-
-INSERT INTO `manutencoes` (`id_manutencao`, `id_sala`, `data_inicio`, `data_fim`, `turno`, `motivo`, `status`, `id_cliente`) VALUES
-(12, 9, '2026-09-01', '2026-09-10', 'integral', 'Manutenção preventiva - elétrica e climatização', 'em_andamento', 1),
-(13, 2, '2026-09-20', '2026-09-22', 'integral', 'Troca de projetor e manutenção de ar-condicionado', 'agendada', 1),
-(14, 6, '2026-09-15', '2026-09-16', 'noite', 'Atualização dos computadores e instalação de softwares', 'agendada', 1);
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `progresso_curso`
+-- Estrutura da tabela `progresso_curso`
 --
 
 CREATE TABLE `progresso_curso` (
@@ -298,25 +194,13 @@ CREATE TABLE `progresso_curso` (
   `aulas_realizadas` int(11) NOT NULL DEFAULT 0,
   `aulas_previstas` int(11) NOT NULL,
   `percentual_conclusao` decimal(5,2) GENERATED ALWAYS AS (`aulas_realizadas` / nullif(`aulas_previstas`,0) * 100) STORED,
-  `observacao` text DEFAULT NULL
+  `observacao` text COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `progresso_curso`
---
-
-INSERT INTO `progresso_curso` (`id_progresso`, `id_curso`, `data_registro`, `aulas_realizadas`, `aulas_previstas`, `observacao`) VALUES
-(6, 1, '2026-09-02', 1, 100, 'Curso iniciado com boa participação'),
-(7, 2, '2026-09-02', 1, 90, 'Primeira semana de aula'),
-(8, 3, '2026-09-05', 0, 60, 'Aguardando início das aulas'),
-(9, 4, '2026-09-10', 0, 5, 'Curso agendado para iniciar'),
-(10, 5, '2026-09-02', 1, 80, 'Curso de Redes iniciado'),
-(11, 6, '2026-09-12', 0, 5, 'Aguardando início');
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `recessos`
+-- Estrutura da tabela `recessos`
 --
 
 CREATE TABLE `recessos` (
@@ -336,56 +220,33 @@ CREATE TABLE `recessos` (
   `data_criacao` timestamp NOT NULL DEFAULT current_timestamp(),
   `data_atualizacao` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `id_cliente` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Despejando dados para a tabela `recessos`
---
-
-INSERT INTO `recessos` (`id_recesso`, `nome_recesso`, `descricao`, `data_inicio`, `data_fim`, `ano`, `tipo`, `id_unidade`, `turno_curso`, `tipo_curso`, `dias_semana`, `id_cursos`, `ativo`, `data_criacao`, `data_atualizacao`, `id_cliente`) VALUES
-(21, 'Dia da Independência', 'Feriado nacional', '2026-09-07', '2026-09-07', 2026, 'feriado', 1, NULL, NULL, NULL, NULL, 1, '2026-09-02 15:51:24', '2026-09-02 15:51:24', 1),
-(22, 'Nossa Senhora Aparecida', 'Feriado nacional', '2026-10-12', '2026-10-12', 2026, 'feriado', 1, NULL, NULL, NULL, NULL, 1, '2026-09-02 15:51:24', '2026-09-02 15:51:24', 1),
-(23, 'Dia de Finados', 'Feriado nacional', '2026-11-02', '2026-11-02', 2026, 'feriado', 1, NULL, NULL, NULL, NULL, 1, '2026-09-02 15:51:24', '2026-09-02 15:51:24', 1),
-(24, 'Proclamação da República', 'Feriado nacional', '2026-11-15', '2026-11-15', 2026, 'feriado', 1, NULL, NULL, NULL, NULL, 1, '2026-09-02 15:51:24', '2026-09-02 15:51:24', 1),
-(25, 'Consciência Negra', 'Feriado estadual', '2026-11-20', '2026-11-20', 2026, 'feriado', 1, NULL, NULL, NULL, NULL, 1, '2026-09-02 15:51:24', '2026-09-02 15:51:24', 1),
-(26, 'Natal', 'Feriado nacional', '2026-12-25', '2026-12-25', 2026, 'feriado', 1, NULL, NULL, NULL, NULL, 1, '2026-09-02 15:51:24', '2026-09-02 15:51:24', 1),
-(27, 'Recesso de Final de Ano', 'Período de recesso institucional', '2026-12-20', '2027-01-05', 2026, 'recesso', 1, NULL, NULL, NULL, NULL, 1, '2026-09-02 15:51:24', '2026-09-02 15:51:24', 1);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `reservas`
+-- Estrutura da tabela `reservas`
 --
 
 CREATE TABLE `reservas` (
   `id_reserva` int(11) NOT NULL,
   `id_sala` int(11) NOT NULL,
   `id_admin` int(11) NOT NULL,
-  `titulo_reserva` varchar(100) NOT NULL,
-  `descricao` text DEFAULT NULL,
+  `titulo_reserva` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descricao` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `data_reserva` date NOT NULL,
-  `turno` enum('manha','tarde','noite') NOT NULL,
+  `turno` enum('manha','tarde','noite') COLLATE utf8mb4_unicode_ci NOT NULL,
   `horario_inicio` time NOT NULL,
   `horario_fim` time NOT NULL,
-  `status_reserva` enum('ativa','cancelada','concluida') NOT NULL DEFAULT 'ativa',
+  `status_reserva` enum('ativa','cancelada','concluida') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ativa',
   `data_criacao` datetime NOT NULL DEFAULT current_timestamp(),
   `id_cliente` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Despejando dados para a tabela `reservas`
---
-
-INSERT INTO `reservas` (`id_reserva`, `id_sala`, `id_admin`, `titulo_reserva`, `descricao`, `data_reserva`, `turno`, `horario_inicio`, `horario_fim`, `status_reserva`, `data_criacao`, `id_cliente`) VALUES
-(1, 8, 1, 'Reunião de Coordenação', 'Reunião com coordenadores para alinhamento do semestre', '2026-09-15', 'manha', '09:00:00', '11:00:00', 'ativa', '2026-09-02 09:51:24', 1),
-(2, 8, 1, 'Entrevistas Seleção', 'Entrevistas para novos professores', '2026-09-20', 'tarde', '14:00:00', '17:00:00', 'ativa', '2026-09-02 09:51:24', 1),
-(3, 1, 1, 'Evento de Abertura', 'Cerimônia de abertura do semestre letivo', '2026-09-01', 'noite', '19:30:00', '22:00:00', 'concluida', '2026-09-02 09:51:24', 1),
-(4, 5, 1, 'Treinamento Equipe', 'Treinamento de novos colaboradores', '2026-09-25', 'manha', '08:00:00', '12:00:00', 'ativa', '2026-09-02 09:51:24', 1);
-
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `salas`
+-- Estrutura da tabela `salas`
 --
 
 CREATE TABLE `salas` (
@@ -393,110 +254,93 @@ CREATE TABLE `salas` (
   `id_unidade` int(11) NOT NULL,
   `andar_sala` int(11) NOT NULL,
   `numero_sala` int(11) NOT NULL,
-  `tipo_sala` varchar(100) NOT NULL DEFAULT 'sala_aula',
+  `tipo_sala` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'sala_aula',
   `capacidade_sala` int(11) NOT NULL DEFAULT 30,
-  `recursos_sala` text DEFAULT NULL,
-  `status_sala` enum('disponivel','ocupada','manutencao','inativa') NOT NULL DEFAULT 'disponivel',
-  `descricao_sala` varchar(500) DEFAULT NULL,
+  `recursos_sala` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status_sala` enum('disponivel','ocupada','manutencao','inativa') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'disponivel',
+  `descricao_sala` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `id_cliente` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Despejando dados para a tabela `salas`
---
-
-INSERT INTO `salas` (`id_sala`, `id_unidade`, `andar_sala`, `numero_sala`, `tipo_sala`, `capacidade_sala`, `recursos_sala`, `status_sala`, `descricao_sala`, `id_cliente`) VALUES
-(46, 1, 1, 101, 'sala_aula', 30, 'Projetor, Ar-condicionado, Quadro Branco', 'disponivel', 'Sala de aula principal - Térreo', 1),
-(47, 1, 1, 102, 'sala_aula', 25, 'Projetor, Ar-condicionado, Quadro Branco', 'disponivel', 'Sala de aula - Térreo', 1),
-(48, 1, 1, 103, 'laboratorio', 20, 'Computadores, Projetor, Ar-condicionado', 'disponivel', 'Laboratório de Informática', 1),
-(49, 1, 2, 201, 'sala_aula', 35, 'Projetor, Ar-condicionado, Quadro Branco, TV', 'disponivel', 'Sala de aula - 2º Andar', 1),
-(50, 1, 2, 202, 'sala_aula', 30, 'Projetor, Ar-condicionado, Quadro Branco', 'disponivel', 'Sala de aula - 2º Andar', 1),
-(51, 1, 2, 203, 'laboratorio', 15, 'Computadores, Projetor, Ar-condicionado, Impressora', 'disponivel', 'Laboratório de Redes', 1),
-(52, 1, 3, 301, 'sala_aula', 40, 'Projetor, Ar-condicionado, Quadro Branco, Som', 'disponivel', 'Auditório - 3º Andar', 1),
-(53, 1, 3, 302, 'sala_reuniao', 12, 'TV, Ar-condicionado, Mesa Redonda', 'disponivel', 'Sala de Reuniões', 1),
-(54, 1, 3, 303, 'sala_aula', 25, 'Projetor, Ar-condicionado', 'manutencao', 'Sala em manutenção', 1);
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `unidades`
+-- Estrutura da tabela `unidades`
 --
 
 CREATE TABLE `unidades` (
   `id_unidade` int(11) NOT NULL,
-  `nome_unidade` varchar(100) NOT NULL,
-  `estado_unidade` char(2) NOT NULL,
-  `cidade_unidade` varchar(80) NOT NULL,
-  `endereco_unidade` varchar(200) NOT NULL,
-  `telefone_unidade` varchar(15) DEFAULT NULL,
-  `email_unidade` varchar(100) DEFAULT NULL,
-  `status_unidade` enum('ativo','inativo') NOT NULL DEFAULT 'ativo',
-  `fuso` enum('America/Noronha','America/Belem','America/Fortaleza','America/Recife','America/Araguaina','America/Maceio','America/Bahia','America/Sao_Paulo','America/Campo_Grande','America/Cuiaba','America/Santarem','America/Porto_Velho','America/Boa_Vista','America/Manaus','America/Eirunepe','America/Rio_Branco') DEFAULT 'America/Sao_Paulo',
+  `nome_unidade` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `estado_unidade` char(2) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cidade_unidade` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `endereco_unidade` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `telefone_unidade` varchar(15) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email_unidade` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status_unidade` enum('ativo','inativo') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ativo',
+  `fuso` enum('America/Noronha','America/Belem','America/Fortaleza','America/Recife','America/Araguaina','America/Maceio','America/Bahia','America/Sao_Paulo','America/Campo_Grande','America/Cuiaba','America/Santarem','America/Porto_Velho','America/Boa_Vista','America/Manaus','America/Eirunepe','America/Rio_Branco') COLLATE utf8mb4_unicode_ci DEFAULT 'America/Sao_Paulo',
   `id_cliente` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Despejando dados para a tabela `unidades`
+-- Extraindo dados da tabela `unidades`
 --
 
 INSERT INTO `unidades` (`id_unidade`, `nome_unidade`, `estado_unidade`, `cidade_unidade`, `endereco_unidade`, `telefone_unidade`, `email_unidade`, `status_unidade`, `fuso`, `id_cliente`) VALUES
-(3, 'Unidade para testes do sistema', 'MG', 'Belo Horizonte', 'Rua do Encanto Esquina Virada da Felicidade', '31999999999', 'unidade@gmail.com', 'ativo', 'America/Sao_Paulo', 1);
+(6, 'Projeto Integrador', 'MG', 'Belo Horizonte', 'Rua do Encanto Esquina Virada da Felicidade', '(31) 99999-9999', 'shanayaflocos@gmail.com', 'ativo', 'America/Sao_Paulo', 10);
 
 -- --------------------------------------------------------
 
 --
--- Estrutura para tabela `usuarios_sistema`
+-- Estrutura da tabela `usuarios_sistema`
 --
 
 CREATE TABLE `usuarios_sistema` (
   `id_usuario` int(11) NOT NULL,
   `id_cliente` int(11) NOT NULL,
-  `nome_usuario` varchar(100) NOT NULL,
-  `email_usuario` varchar(100) NOT NULL,
-  `senha_usuario` varchar(255) NOT NULL,
-  `tipo_usuario` enum('admin_cliente','gerente','usuario','visualizador') NOT NULL DEFAULT 'usuario',
-  `status_usuario` enum('ativo','inativo','pendente','bloqueado') NOT NULL DEFAULT 'pendente',
-  `telefone_usuario` varchar(15) DEFAULT NULL,
+  `nome_usuario` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email_usuario` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `senha_usuario` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_usuario` enum('admin_cliente','gerente','usuario','visualizador') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'usuario',
+  `status_usuario` enum('ativo','inativo','pendente','bloqueado') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pendente',
+  `telefone_usuario` varchar(15) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `data_cadastro` datetime NOT NULL DEFAULT current_timestamp(),
   `data_ultimo_acesso` datetime DEFAULT NULL,
   `tentativas_login` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Despejando dados para a tabela `usuarios_sistema`
+-- Extraindo dados da tabela `usuarios_sistema`
 --
 
 INSERT INTO `usuarios_sistema` (`id_usuario`, `id_cliente`, `nome_usuario`, `email_usuario`, `senha_usuario`, `tipo_usuario`, `status_usuario`, `telefone_usuario`, `data_cadastro`, `data_ultimo_acesso`, `tentativas_login`) VALUES
-(1, 1, 'Administrador Sistema', 'admin@senac.br', '$2y$10$NfQyh2dap4isFZMESBoIc.VF1V.7hVRll.JOVzwRO/6wU2f4xqrAu', 'admin_cliente', 'ativo', '(31) 99999-9999', '2026-09-03 09:26:07', '2026-10-26 08:22:52', 0),
-(2, 1, 'João Souza Admin', 'joao.admin@padrao.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin_cliente', 'ativo', '(31) 99999-8888', '2026-09-04 10:00:29', '2026-09-04 09:00:29', 0),
-(3, 1, 'Maria Oliveira Gerente', 'maria.gerente@padrao.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'gerente', 'ativo', '(31) 88888-7777', '2026-09-04 10:00:29', '2026-09-04 08:00:29', 0),
-(4, 1, 'Pedro Santos Usuario', 'pedro.usuario@padrao.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario', 'ativo', '(31) 77777-6666', '2026-09-04 10:00:29', '2026-09-04 07:00:29', 0),
-(5, 1, 'Ana Paula Visualizador', 'ana.visualizador@padrao.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'visualizador', 'ativo', '(31) 66666-5555', '2026-09-04 10:00:29', NULL, 0),
-(6, 1, 'Carlos Usuario Pendente', 'carlos.pendente@padrao.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario', 'pendente', '(31) 55555-4444', '2026-09-04 10:00:29', NULL, 0),
-(7, 1, 'Roberto Usuario Bloqueado', 'roberto.bloqueado@padrao.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario', 'bloqueado', '(31) 44444-3333', '2026-09-04 10:00:29', '2026-08-30 10:00:29', 5),
-(8, 2, 'Carlos Diretor', 'carlos.diretor@escolaintegral.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin_cliente', 'ativo', '(11) 3333-4444', '2026-09-04 10:00:29', '2026-09-04 09:30:29', 0),
-(9, 2, 'Fernanda Coordenadora', 'fernanda.coordenadora@escolaintegral.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'gerente', 'ativo', '(11) 3333-4455', '2026-09-04 10:00:29', '2026-09-04 09:00:29', 0),
-(10, 2, 'Lucas Professor', 'lucas.professor@escolaintegral.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario', 'ativo', '(11) 3333-4466', '2026-09-04 10:00:29', '2026-09-04 08:00:29', 0),
-(11, 2, 'Mariana Visualizadora', 'mariana.visual@escolaintegral.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'visualizador', 'ativo', '(11) 3333-4477', '2026-09-04 10:00:29', NULL, 0),
-(12, 3, 'Roberta Proprietária', 'roberta@belezastilo.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin_cliente', 'ativo', '(21) 2222-3333', '2026-09-04 10:00:29', '2026-09-04 08:00:29', 0),
-(13, 3, 'Juliana Gerente', 'juliana.gerente@belezastilo.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'gerente', 'ativo', '(21) 2222-3344', '2026-09-04 10:00:29', '2026-09-04 07:00:29', 0),
-(14, 3, 'Paulo Usuario', 'paulo.usuario@belezastilo.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario', 'ativo', '(21) 2222-3355', '2026-09-04 10:00:29', '2026-09-04 06:00:29', 0),
-(15, 4, 'Ricardo Admin', 'ricardo.admin@techsolutions.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin_cliente', 'ativo', '(41) 4444-5555', '2026-09-04 10:00:29', '2026-09-04 05:00:29', 0),
-(16, 4, 'Patrícia Visualizadora', 'patricia.visual@techsolutions.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'visualizador', 'ativo', '(41) 4444-5566', '2026-09-04 10:00:29', NULL, 0),
-(17, 4, 'Lucas Usuario', 'lucas.usuario@techsolutions.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario', 'pendente', '(41) 4444-5577', '2026-09-04 10:00:29', NULL, 0),
-(18, 4, 'André Usuario Inativo', 'andre.inativo@techsolutions.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario', 'inativo', '(41) 4444-5588', '2026-09-04 10:00:29', '2026-08-25 10:00:29', 0),
-(19, 5, 'Marina Admin', 'marina@educacaoparatodos.org', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin_cliente', 'pendente', '(31) 5555-6666', '2026-09-04 10:00:29', NULL, 0),
-(20, 7, 'Fernando CEO', 'fernando.ceo@inovacaotech.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin_cliente', 'ativo', '(61) 8888-9999', '2026-09-04 10:00:29', '2026-09-04 09:00:29', 0),
-(21, 7, 'Carla Gerente', 'carla.gerente@inovacaotech.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'gerente', 'ativo', '(61) 8888-9990', '2026-09-04 10:00:29', '2026-09-04 08:00:29', 0),
-(22, 7, 'Tiago Usuario', 'tiago.usuario@inovacaotech.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'usuario', 'ativo', '(61) 8888-9991', '2026-09-04 10:00:29', '2026-09-04 07:00:29', 0),
-(23, 7, 'Sofia Visualizadora', 'sofia.visual@inovacaotech.com.br', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'visualizador', 'pendente', '(61) 8888-9992', '2026-09-04 10:00:29', NULL, 0);
+(25, 10, 'Shanaya Nataly', 'shanayaflocos@gmail.com', '$2y$10$8b2J5S3tvl.vqdDgkVkvaOeSr9QHMlZ0Mc.JzB9lbR8My1TH3i9Di', 'admin_cliente', 'ativo', '(31) 91234-5678', '2026-11-06 10:17:51', '2026-11-06 10:17:59', 0),
+(26, 10, 'Shaya', 'shaya@gmail.com', '$2y$10$rZie1EFNSQtyffJUg8XyDuzOCQZ6FRtEJqFw1JtVh2ysD1Z9r/oL6', 'gerente', 'ativo', '31999999999', '2026-11-06 10:20:11', NULL, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura da tabela `usuarios_unidades`
+--
+
+CREATE TABLE `usuarios_unidades` (
+  `id_usuario` int(11) NOT NULL,
+  `id_unidade` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Extraindo dados da tabela `usuarios_unidades`
+--
+
+INSERT INTO `usuarios_unidades` (`id_usuario`, `id_unidade`) VALUES
+(25, 6),
+(26, 6);
 
 --
 -- Índices para tabelas despejadas
 --
 
 --
--- Índices de tabela `clientes`
+-- Índices para tabela `clientes`
 --
 ALTER TABLE `clientes`
   ADD PRIMARY KEY (`id_cliente`),
@@ -504,14 +348,14 @@ ALTER TABLE `clientes`
   ADD UNIQUE KEY `cnpj_cliente` (`cnpj_cliente`);
 
 --
--- Índices de tabela `configuracoes_turnos`
+-- Índices para tabela `configuracoes_turnos`
 --
 ALTER TABLE `configuracoes_turnos`
   ADD PRIMARY KEY (`id_config`),
   ADD UNIQUE KEY `turno` (`turno`);
 
 --
--- Índices de tabela `cronograma`
+-- Índices para tabela `cronograma`
 --
 ALTER TABLE `cronograma`
   ADD PRIMARY KEY (`id_aula`),
@@ -522,7 +366,7 @@ ALTER TABLE `cronograma`
   ADD KEY `fk_cronograma_cliente` (`id_cliente`);
 
 --
--- Índices de tabela `cursos`
+-- Índices para tabela `cursos`
 --
 ALTER TABLE `cursos`
   ADD PRIMARY KEY (`id_curso`),
@@ -532,7 +376,7 @@ ALTER TABLE `cursos`
   ADD KEY `fk_curso_cliente` (`id_cliente`);
 
 --
--- Índices de tabela `funcionarios`
+-- Índices para tabela `funcionarios`
 --
 ALTER TABLE `funcionarios`
   ADD PRIMARY KEY (`id_funcionario`),
@@ -541,14 +385,14 @@ ALTER TABLE `funcionarios`
   ADD KEY `fk_funcionario_cliente` (`id_cliente`);
 
 --
--- Índices de tabela `historico_sistema`
+-- Índices para tabela `historico_sistema`
 --
 ALTER TABLE `historico_sistema`
   ADD PRIMARY KEY (`id_historico`),
   ADD KEY `id_funcionario` (`id_funcionario`);
 
 --
--- Índices de tabela `manutencoes`
+-- Índices para tabela `manutencoes`
 --
 ALTER TABLE `manutencoes`
   ADD PRIMARY KEY (`id_manutencao`),
@@ -556,14 +400,14 @@ ALTER TABLE `manutencoes`
   ADD KEY `fk_manutencao_cliente` (`id_cliente`);
 
 --
--- Índices de tabela `progresso_curso`
+-- Índices para tabela `progresso_curso`
 --
 ALTER TABLE `progresso_curso`
   ADD PRIMARY KEY (`id_progresso`),
   ADD KEY `id_curso` (`id_curso`);
 
 --
--- Índices de tabela `recessos`
+-- Índices para tabela `recessos`
 --
 ALTER TABLE `recessos`
   ADD PRIMARY KEY (`id_recesso`),
@@ -575,7 +419,7 @@ ALTER TABLE `recessos`
   ADD KEY `fk_recesso_cliente` (`id_cliente`);
 
 --
--- Índices de tabela `reservas`
+-- Índices para tabela `reservas`
 --
 ALTER TABLE `reservas`
   ADD PRIMARY KEY (`id_reserva`),
@@ -584,7 +428,7 @@ ALTER TABLE `reservas`
   ADD KEY `fk_reserva_cliente` (`id_cliente`);
 
 --
--- Índices de tabela `salas`
+-- Índices para tabela `salas`
 --
 ALTER TABLE `salas`
   ADD PRIMARY KEY (`id_sala`),
@@ -592,7 +436,7 @@ ALTER TABLE `salas`
   ADD KEY `fk_sala_cliente` (`id_cliente`);
 
 --
--- Índices de tabela `unidades`
+-- Índices para tabela `unidades`
 --
 ALTER TABLE `unidades`
   ADD PRIMARY KEY (`id_unidade`),
@@ -600,7 +444,7 @@ ALTER TABLE `unidades`
   ADD KEY `fk_unidade_cliente` (`id_cliente`);
 
 --
--- Índices de tabela `usuarios_sistema`
+-- Índices para tabela `usuarios_sistema`
 --
 ALTER TABLE `usuarios_sistema`
   ADD PRIMARY KEY (`id_usuario`),
@@ -608,14 +452,21 @@ ALTER TABLE `usuarios_sistema`
   ADD KEY `id_cliente` (`id_cliente`);
 
 --
--- AUTO_INCREMENT para tabelas despejadas
+-- Índices para tabela `usuarios_unidades`
+--
+ALTER TABLE `usuarios_unidades`
+  ADD PRIMARY KEY (`id_usuario`,`id_unidade`),
+  ADD KEY `id_unidade` (`id_unidade`);
+
+--
+-- AUTO_INCREMENT de tabelas despejadas
 --
 
 --
 -- AUTO_INCREMENT de tabela `clientes`
 --
 ALTER TABLE `clientes`
-  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id_cliente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT de tabela `configuracoes_turnos`
@@ -645,7 +496,7 @@ ALTER TABLE `funcionarios`
 -- AUTO_INCREMENT de tabela `historico_sistema`
 --
 ALTER TABLE `historico_sistema`
-  MODIFY `id_historico` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id_historico` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT de tabela `manutencoes`
@@ -681,71 +532,78 @@ ALTER TABLE `salas`
 -- AUTO_INCREMENT de tabela `unidades`
 --
 ALTER TABLE `unidades`
-  MODIFY `id_unidade` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_unidade` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de tabela `usuarios_sistema`
 --
 ALTER TABLE `usuarios_sistema`
-  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id_usuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
--- Restrições para tabelas despejadas
+-- Restrições para despejos de tabelas
 --
 
 --
--- Restrições para tabelas `cronograma`
+-- Limitadores para a tabela `cronograma`
 --
 ALTER TABLE `cronograma`
   ADD CONSTRAINT `fk_cronograma_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `cursos`
+-- Limitadores para a tabela `cursos`
 --
 ALTER TABLE `cursos`
   ADD CONSTRAINT `fk_curso_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `funcionarios`
+-- Limitadores para a tabela `funcionarios`
 --
 ALTER TABLE `funcionarios`
   ADD CONSTRAINT `fk_funcionario_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `manutencoes`
+-- Limitadores para a tabela `manutencoes`
 --
 ALTER TABLE `manutencoes`
   ADD CONSTRAINT `fk_manutencao_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `recessos`
+-- Limitadores para a tabela `recessos`
 --
 ALTER TABLE `recessos`
   ADD CONSTRAINT `fk_recesso_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `reservas`
+-- Limitadores para a tabela `reservas`
 --
 ALTER TABLE `reservas`
   ADD CONSTRAINT `fk_reserva_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `salas`
+-- Limitadores para a tabela `salas`
 --
 ALTER TABLE `salas`
   ADD CONSTRAINT `fk_sala_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `unidades`
+-- Limitadores para a tabela `unidades`
 --
 ALTER TABLE `unidades`
   ADD CONSTRAINT `fk_unidade_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE;
 
 --
--- Restrições para tabelas `usuarios_sistema`
+-- Limitadores para a tabela `usuarios_sistema`
 --
 ALTER TABLE `usuarios_sistema`
   ADD CONSTRAINT `fk_usuario_cliente` FOREIGN KEY (`id_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE;
+
+--
+-- Limitadores para a tabela `usuarios_unidades`
+--
+ALTER TABLE `usuarios_unidades`
+  ADD CONSTRAINT `usuarios_unidades_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios_sistema` (`id_usuario`) ON DELETE CASCADE,
+  ADD CONSTRAINT `usuarios_unidades_ibfk_2` FOREIGN KEY (`id_unidade`) REFERENCES `unidades` (`id_unidade`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
