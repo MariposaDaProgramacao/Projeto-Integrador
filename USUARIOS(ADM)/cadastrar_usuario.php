@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-// ARQUIVO: USUARIOS(ADM)/cadastrar_usuario.php (MODIFICADO PARA MULTI-TENANT)
+// ARQUIVO: USUARIOS(ADM)/cadastrar_usuario.php (MODIFICADO PARA MULTI-TENANT E MULTI-UNIDADES)
 // FUNÇÃO: Cadastrar novo usuário
 // ============================================================
 
@@ -42,7 +42,7 @@ $id_usuario_logado = getUsuarioId();
 $tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
 $id_unidade_usuario = $_SESSION['usuario_unidade'] ?? null;
 
-// Se não tiver unidade definida, buscar a primeira unidade do cliente
+// Se não tiver unidade definida, buscar a primeira unidade do cliente (para gerentes)
 if ($id_unidade_usuario == 0 || $id_unidade_usuario === null) {
     try {
         $stmt = $conn->prepare("SELECT id_unidade FROM unidades WHERE id_cliente = ? ORDER BY id_unidade LIMIT 1");
@@ -90,15 +90,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $telefone = preg_replace('/\D/', '', $telefone);
     $tipo_usuario_novo = $_POST['tipo_usuario'] ?? '';
     
+    // AQUI ESTÁ A MUDANÇA: Agora recebemos um array de unidades
+    $unidades_selecionadas = [];
+
     if ($tipo_usuario === 'gerente') {
-        $unidade = $id_unidade_usuario;
+        // Gerente só cadastra para a própria unidade
+        $unidades_selecionadas = [$id_unidade_usuario];
     } else {
-        $unidade = (int)($_POST['unidade'] ?? 0);
+        // Admin pode escolher várias (vem do select multiple)
+        $unidades_selecionadas = $_POST['unidades'] ?? [];
     }
 
     // Validações
-    if (empty($nome) || empty($email) || empty($tipo_usuario_novo) || empty($unidade) || $unidade <= 0) {
-        $erro = 'Preencha todos os campos obrigatórios.';
+    if (empty($nome) || empty($email) || empty($tipo_usuario_novo) || empty($unidades_selecionadas)) {
+        $erro = 'Preencha todos os campos obrigatórios (incluindo pelo menos uma unidade).';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $erro = 'E-mail inválido.';
     } elseif ($tipo_usuario === 'gerente' && $tipo_usuario_novo === 'admin_cliente') {
@@ -116,14 +121,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($check->fetchColumn() > 0) {
                 $erro = 'Este e-mail já está cadastrado nesta organização.';
             } else {
-                // Verificar se a unidade pertence ao cliente
-                $checkUnidade = $conn->prepare("SELECT COUNT(*) FROM unidades WHERE id_unidade = :unidade AND id_cliente = :id_cliente");
-                $checkUnidade->execute([
-                    ':unidade' => $unidade,
-                    ':id_cliente' => $id_cliente
-                ]);
-                if ($checkUnidade->fetchColumn() == 0) {
-                    $erro = 'Unidade inválida ou não pertence à sua organização.';
+                // Verificar se TODAS as unidades selecionadas pertencem ao cliente
+                $unidades_validas = true;
+                foreach ($unidades_selecionadas as $id_unidade_sel) {
+                    $checkUnidade = $conn->prepare("SELECT COUNT(*) FROM unidades WHERE id_unidade = :unidade AND id_cliente = :id_cliente");
+                    $checkUnidade->execute([
+                        ':unidade' => $id_unidade_sel,
+                        ':id_cliente' => $id_cliente
+                    ]);
+                    if ($checkUnidade->fetchColumn() == 0) {
+                        $unidades_validas = false;
+                        break;
+                    }
+                }
+
+                if (!$unidades_validas) {
+                    $erro = 'Uma ou mais unidades são inválidas ou não pertencem à sua organização.';
                 } else {
                     // Gerar senha provisória (função vem de conexao_banco.php)
                     $senha_provisoria = gerarSenhaProvisoria();
@@ -143,11 +156,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $conn->beginTransaction();
 
+                    // ATENÇÃO: O 'id_unidade' foi removido deste INSERT principal
                     $sqlInsert = "INSERT INTO usuarios_sistema (
                         id_cliente,
                         nome_usuario,
                         tipo_usuario,
-                        id_unidade,
                         email_usuario,
                         telefone_usuario,
                         senha_usuario,
@@ -157,7 +170,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         :id_cliente,
                         :nome,
                         :tipo,
-                        :unidade,
                         :email,
                         :telefone,
                         :senha,
@@ -169,7 +181,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':id_cliente' => $id_cliente,
                         ':nome' => $nome,
                         ':tipo' => $tipo_usuario_db,
-                        ':unidade' => $unidade,
                         ':email' => $email,
                         ':telefone' => $telefone,
                         ':senha' => $senha_hash
@@ -178,6 +189,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $idNovoUsuario = $conn->lastInsertId();
                     $nome_cadastrado = $nome;
                     $email_cadastrado = $email;
+
+                    // ============================================================
+                    // NOVO: SALVAR OS VÍNCULOS NA TABELA usuarios_unidades
+                    // ============================================================
+                    $sqlVinculo = "INSERT INTO usuarios_unidades (id_usuario, id_unidade) VALUES (:id_usuario, :id_unidade)";
+                    $stmtVinculo = $conn->prepare($sqlVinculo);
+                    
+                    foreach ($unidades_selecionadas as $id_unidade_sel) {
+                        $stmtVinculo->execute([
+                            ':id_usuario' => $idNovoUsuario,
+                            ':id_unidade' => $id_unidade_sel
+                        ]);
+                    }
 
                     // Registrar no histórico
                     try {
@@ -204,7 +228,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'usuario' => $nome,
                                 'email' => $email,
                                 'tipo' => $tipo_usuario_novo,
-                                'unidade' => $unidade
+                                'unidades' => $unidades_selecionadas // Salvando as unidades no log
                             ]),
                             ':ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'
                         ]);
@@ -361,21 +385,27 @@ if ($message && $message['tipo'] === 'error') {
             </div>
 
             <div class="form-row">
-                <div class="form-group">
-                    <label for="unidade">Unidade *</label>
+                <div class="form-group" style="width: 100%;">
+                    <label for="unidade">Unidade(s) *</label>
                     
                     <?php if ($tipo_usuario === 'admin_cliente'): ?>
-                        <select name="unidade" id="unidade" required>
-                            <option value="">Selecione a unidade</option>
+                        <!-- ATRIBUTO MULTIPLE ADICIONADO AQUI -->
+                        <select name="unidades[]" id="unidade" multiple required style="height: 120px; padding: 8px;">
+                            <option disabled style="color: #7a8aa0;">Segure a tecla Ctrl (Windows) ou Command (Mac) para selecionar várias unidades</option>
                             <?php foreach ($unidades as $unidade): ?>
-                                <option value="<?php echo $unidade['id_unidade']; ?>" <?php echo ($_POST['unidade'] ?? '') == $unidade['id_unidade'] ? 'selected' : ''; ?>>
+                                <?php 
+                                    // Mantém a seleção caso o formulário dê erro e recarregue
+                                    $selected = in_array($unidade['id_unidade'], $_POST['unidades'] ?? []) ? 'selected' : ''; 
+                                ?>
+                                <option value="<?php echo $unidade['id_unidade']; ?>" <?php echo $selected; ?>>
                                     <?php echo htmlspecialchars($unidade['nome_unidade']); ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
+                        <small style="color: #7a8aa0;"><i class="fas fa-info-circle"></i> O administrador pode gerenciar múltiplas unidades.</small>
                     <?php else: ?>
                         <?php $nomeUnidadeCoordenador = buscarNomeUnidade($conn, $id_unidade_usuario, $id_cliente); ?>
-                        <input type="hidden" name="unidade" value="<?php echo $id_unidade_usuario; ?>">
+                        <input type="hidden" name="unidades[]" value="<?php echo $id_unidade_usuario; ?>">
                         <input type="text" 
                                value="<?php echo htmlspecialchars($nomeUnidadeCoordenador); ?>" 
                                disabled
