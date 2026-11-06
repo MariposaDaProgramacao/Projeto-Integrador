@@ -109,6 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['limite_unidades'] = $usuario['limite_unidades'];
                 $_SESSION['limite_usuarios'] = $usuario['limite_usuarios'];
                 
+                // NOVO: CARREGA AS UNIDADES DO USUÁRIO NA SESSÃO
+                atualizarSessaoUnidades($conn);
+                
                 // ============================================================
                 // REDIRECIONAR 
                 // ============================================================
@@ -395,6 +398,8 @@ $message = getMessage();
         console.log('ID Cliente: <?php echo $_SESSION['id_cliente']; ?>');
         console.log('Nome: <?php echo $_SESSION['nome_usuario']; ?>');
         console.log('Tipo: <?php echo $_SESSION['tipo_usuario']; ?>');
+        // NOVO: Mostra no console as unidades do usuário
+        console.log('Unidades: <?php echo json_encode($_SESSION['minhas_unidades'] ?? []); ?>');
     </script>
     <?php endif; ?>
 

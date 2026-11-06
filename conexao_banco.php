@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-// ARQUIVO: conexao_banco.php (RAIZ) - CORRIGIDO
+// ARQUIVO: conexao_banco.php (RAIZ) - ARQUITETURA MULTI-UNIT
 // FUNÇÃO: Conexão com o banco de dados e funções auxiliares
 // ============================================================
  
@@ -38,23 +38,18 @@ if (session_status() === PHP_SESSION_NONE) {
 }
  
 // ============================================================
-// 4. FUNÇÕES AUXILIARES PARA MULTI-TENANT
+// 4. FUNÇÕES AUXILIARES BÁSICAS E MULTI-TENANT
 // ============================================================
  
 /**
  * Verifica se o usuário está logado
- *
- * @return bool
  */
 function isLoggedIn() {
-    // CORRIGIDO: Usando 'id_usuario' que é o nome usado no login e dashboard
     return isset($_SESSION['id_usuario']) && !empty($_SESSION['id_usuario']);
 }
  
 /**
  * Retorna o ID do cliente atual (da sessão)
- *
- * @return int|null
  */
 function getClienteId() {
     return $_SESSION['id_cliente'] ?? null;
@@ -62,18 +57,13 @@ function getClienteId() {
  
 /**
  * Retorna o ID do usuário logado
- *
- * @return int|null
  */
 function getUsuarioId() {
-    // CORRIGIDO: Usando 'id_usuario' que é o nome usado no login e dashboard
     return $_SESSION['id_usuario'] ?? null;
 }
  
 /**
  * Retorna o tipo do usuário logado
- *
- * @return string|null
  */
 function getTipoUsuario() {
     return $_SESSION['tipo_usuario'] ?? null;
@@ -81,8 +71,6 @@ function getTipoUsuario() {
  
 /**
  * Retorna o nome do cliente atual
- *
- * @return string|null
  */
 function getNomeCliente() {
     return $_SESSION['nome_cliente'] ?? null;
@@ -90,10 +78,6 @@ function getNomeCliente() {
  
 /**
  * Define uma mensagem na sessão
- *
- * @param string $tipo 'success' ou 'error'
- * @param string $mensagem
- * @return void
  */
 function setMessage($tipo, $mensagem) {
     $_SESSION['mensagem'] = [
@@ -104,8 +88,6 @@ function setMessage($tipo, $mensagem) {
  
 /**
  * Recupera e remove a mensagem da sessão
- *
- * @return array|null
  */
 function getMessage() {
     if (isset($_SESSION['mensagem'])) {
@@ -118,9 +100,6 @@ function getMessage() {
  
 /**
  * Redireciona para uma URL
- *
- * @param string $url
- * @return void
  */
 function redirect($url) {
     header('Location: ' . $url);
@@ -128,30 +107,19 @@ function redirect($url) {
 }
  
 /**
- * Verifica se o usuário tem permissão para acessar determinada funcionalidade
- *
- * @param array $tipos_permitidos Array de tipos de usuário permitidos
- * @return bool
+ * Verifica se o usuário tem permissão
  */
 function hasPermission($tipos_permitidos = []) {
-    if (!isLoggedIn()) {
-        return false;
-    }
-   
+    if (!isLoggedIn()) return false;
+    
     $tipo = getTipoUsuario();
-    if (empty($tipos_permitidos)) {
-        return true;
-    }
+    if (empty($tipos_permitidos)) return true;
    
     return in_array($tipo, $tipos_permitidos);
 }
  
 /**
- * Verifica se o usuário tem permissão e redireciona se não tiver
- *
- * @param array $tipos_permitidos
- * @param string $url_redirect URL para redirecionar se não tiver permissão
- * @return void
+ * Verifica permissão e redireciona se não tiver
  */
 function requirePermission($tipos_permitidos = [], $url_redirect = '../AUTENTIFICACAO_ACESSO/dashboard.php') {
     if (!hasPermission($tipos_permitidos)) {
@@ -159,14 +127,58 @@ function requirePermission($tipos_permitidos = [], $url_redirect = '../AUTENTIFI
         redirect($url_redirect);
     }
 }
+
+// ============================================================
+// 5. NOVAS FUNÇÕES: GERENCIAMENTO DE MÚLTIPLAS UNIDADES
+// ============================================================
+
+/**
+ * Retorna um array com todos os IDs de unidades que o usuário logado tem acesso.
+ * Se for admin, pega todas as unidades do cliente.
+ * Se for gerente/comum, busca na tabela de vínculos usuarios_unidades.
+ */
+function getMinhasUnidades($conn) {
+    $id_usuario = getUsuarioId();
+    $id_cliente = getClienteId();
+    $tipo = getTipoUsuario();
+
+    if (!$id_usuario || !$id_cliente) return [];
+
+    // Se for administrador, ele tem acesso a TODAS as unidades do cliente
+    if ($tipo === 'admin_cliente') {
+        $stmt = $conn->prepare("SELECT id_unidade FROM unidades WHERE id_cliente = ?");
+        $stmt->execute([$id_cliente]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    // Se for gerente/comum, busca na tabela de vínculos
+    $stmt = $conn->prepare("SELECT id_unidade FROM usuarios_unidades WHERE id_usuario = ?");
+    $stmt->execute([$id_usuario]);
+    return $stmt->fetchAll(PDO::FETCH_COLUMN);
+}
+
+/**
+ * Atualiza a sessão com as unidades atuais e define a "unidade principal"
+ * Deve ser chamada logo após o login do usuário.
+ */
+function atualizarSessaoUnidades($conn) {
+    $unidades = getMinhasUnidades($conn);
+    $_SESSION['minhas_unidades'] = $unidades;
+    
+    // Define a primeira unidade como a principal da sessão (para compatibilidade com o menu antigo)
+    if (!empty($unidades)) {
+        $_SESSION['usuario_unidade'] = $unidades[0];
+    } else {
+        $_SESSION['usuario_unidade'] = null;
+    }
+}
+ 
+// ============================================================
+// 6. OUTRAS FUNÇÕES AUXILIARES DO SISTEMA
+// ============================================================
  
 /**
- * Busca o nome de uma unidade pelo ID (com validação de cliente)
- *
- * @param PDO $conn Conexão com o banco
- * @param int $id_unidade ID da unidade
- * @param int $id_cliente ID do cliente
- * @return string Nome da unidade ou 'Unidade não definida'
+ * Busca o nome de uma unidade pelo ID
  */
 function buscarNomeUnidade($conn, $id_unidade, $id_cliente) {
     try {
@@ -184,9 +196,6 @@ function buscarNomeUnidade($conn, $id_unidade, $id_cliente) {
  
 /**
  * Gera uma senha provisória
- *
- * @param int $tamanho Tamanho da senha (padrão: 8)
- * @return string
  */
 function gerarSenhaProvisoria($tamanho = 8) {
     $caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -199,9 +208,6 @@ function gerarSenhaProvisoria($tamanho = 8) {
  
 /**
  * Formata um telefone para exibição
- *
- * @param string $telefone
- * @return string
  */
 function formatarTelefone($telefone) {
     if (empty($telefone)) return '';
@@ -216,9 +222,6 @@ function formatarTelefone($telefone) {
  
 /**
  * Limpa um telefone (remove caracteres não numéricos)
- *
- * @param string $telefone
- * @return string
  */
 function limparTelefone($telefone) {
     return preg_replace('/\D/', '', $telefone);
@@ -226,9 +229,6 @@ function limparTelefone($telefone) {
  
 /**
  * Mapeia cargo para tipo de usuário no sistema
- *
- * @param string $cargo Cargo do funcionário (professor, coordenador, etc.)
- * @return string Tipo de usuário no sistema
  */
 function mapearCargoParaTipo($cargo) {
     $map = [
@@ -246,9 +246,6 @@ function mapearCargoParaTipo($cargo) {
  
 /**
  * Mapeia tipo de usuário para label amigável
- *
- * @param string $tipo Tipo de usuário
- * @return string Label amigável
  */
 function getTipoLabel($tipo) {
     $map = [
@@ -263,9 +260,6 @@ function getTipoLabel($tipo) {
  
 /**
  * Mapeia tipo de usuário para classe CSS do badge
- *
- * @param string $tipo Tipo de usuário
- * @return string Classe CSS
  */
 function getBadgeClass($tipo) {
     $map = [
@@ -279,26 +273,19 @@ function getBadgeClass($tipo) {
 }
  
 // ============================================================
-// 5. VALIDAÇÃO DA SESSÃO (OPCIONAL - PODE SER CHAMADA NAS PÁGINAS)
+// 7. VALIDAÇÃO DA SESSÃO E HISTÓRICO
 // ============================================================
  
 /**
  * Verifica se a sessão atual é válida e se o usuário ainda existe no banco
- *
- * @param PDO $conn Conexão com o banco
- * @return bool
  */
 function validarSessao($conn) {
-    if (!isLoggedIn()) {
-        return false;
-    }
+    if (!isLoggedIn()) return false;
    
     $id_usuario = getUsuarioId();
     $id_cliente = getClienteId();
    
-    if (!$id_usuario || !$id_cliente) {
-        return false;
-    }
+    if (!$id_usuario || !$id_cliente) return false;
    
     try {
         $stmt = $conn->prepare("
@@ -313,14 +300,8 @@ function validarSessao($conn) {
         ]);
         $usuario = $stmt->fetch();
        
-        if (!$usuario) {
-            return false;
-        }
-       
-        // Verificar se o usuário está ativo
-        if ($usuario['status_usuario'] !== 'ativo') {
-            return false;
-        }
+        if (!$usuario) return false;
+        if ($usuario['status_usuario'] !== 'ativo') return false;
        
         return true;
        
@@ -329,22 +310,8 @@ function validarSessao($conn) {
     }
 }
  
-// ============================================================
-// 6. FUNÇÃO PARA REGISTRAR LOG NO SISTEMA
-// ============================================================
- 
 /**
  * Registra uma ação no histórico do sistema
- *
- * @param PDO $conn Conexão com o banco
- * @param int $id_funcionario ID do funcionário que realizou a ação
- * @param string $tabela Nome da tabela afetada
- * @param int $id_registro ID do registro afetado
- * @param string $acao Tipo de ação (INSERT, UPDATE, DELETE)
- * @param array|null $dados_antigos Dados antes da alteração (opcional)
- * @param array|null $dados_novos Dados depois da alteração (opcional)
- * @param string|null $motivo Motivo da ação (opcional)
- * @return bool
  */
 function registrarHistorico($conn, $id_funcionario, $tabela, $id_registro, $acao, $dados_antigos = null, $dados_novos = null, $motivo = null) {
     try {
@@ -391,7 +358,7 @@ function registrarHistorico($conn, $id_funcionario, $tabela, $id_registro, $acao
 }
  
 // ============================================================
-// 7. COMPATIBILIDADE COM CÓDIGO LEGADO
+// 8. COMPATIBILIDADE COM CÓDIGO LEGADO
 // ============================================================
  
 // Para garantir compatibilidade com código que usa $pdo em vez de $conn
@@ -399,18 +366,13 @@ if (!isset($pdo)) {
     $pdo = $conn;
 }
  
-// Para garantir compatibilidade entre os diferentes nomes de sessão
-// Se existir 'usuario_id' (do sistema antigo), copiar para 'id_usuario' (padrão atual)
+// Compatibilidade de variáveis de sessão
 if (isset($_SESSION['usuario_id']) && !isset($_SESSION['id_usuario'])) {
     $_SESSION['id_usuario'] = $_SESSION['usuario_id'];
 }
- 
-// Se existir 'id_usuario' (padrão atual), copiar para 'usuario_id' (sistema antigo)
 if (isset($_SESSION['id_usuario']) && !isset($_SESSION['usuario_id'])) {
     $_SESSION['usuario_id'] = $_SESSION['id_usuario'];
 }
- 
-// Para garantir compatibilidade com código que usa $_SESSION['usuario_id'] ou $_SESSION['funcionario_id']
 if (isset($_SESSION['id_usuario']) && !isset($_SESSION['funcionario_id'])) {
     $_SESSION['funcionario_id'] = $_SESSION['id_usuario'];
 }
@@ -418,7 +380,7 @@ if (isset($_SESSION['funcionario_id']) && !isset($_SESSION['id_usuario'])) {
     $_SESSION['id_usuario'] = $_SESSION['funcionario_id'];
 }
  
-// Para garantir compatibilidade com $_SESSION['usuario_cargo']
+// Compatibilidade com $_SESSION['usuario_cargo']
 if (isset($_SESSION['tipo_usuario']) && !isset($_SESSION['usuario_cargo'])) {
     $map_cargo = [
         'admin_cliente' => 'administrador',
@@ -427,10 +389,4 @@ if (isset($_SESSION['tipo_usuario']) && !isset($_SESSION['usuario_cargo'])) {
     ];
     $_SESSION['usuario_cargo'] = $map_cargo[$_SESSION['tipo_usuario']] ?? $_SESSION['tipo_usuario'];
 }
- 
-// Para garantir compatibilidade com $_SESSION['usuario_unidade']
-if (isset($_SESSION['id_unidade']) && !isset($_SESSION['usuario_unidade'])) {
-    $_SESSION['usuario_unidade'] = $_SESSION['id_unidade'];
-}
- 
 ?>

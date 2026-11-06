@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-// ARQUIVO: USUARIOS(ADM)/aprovar_usuario.php (MODIFICADO PARA MULTI-TENANT)
+// ARQUIVO: USUARIOS(ADM)/aprovar_usuario.php (CORRIGIDO PARA MULTI-UNIDADES)
 // FUNÇÃO: Aprovar usuário (pendente → ativo)
 // ============================================================
 
@@ -72,11 +72,11 @@ if ($id <= 0) {
 // ============================================================
 
 try {
-    $sql = "SELECT u.*, un.nome_unidade 
-            FROM usuarios_sistema u
-            LEFT JOIN unidades un ON u.id_unidade = un.id_unidade AND un.id_cliente = u.id_cliente
-            WHERE u.id_usuario = :id 
-            AND u.id_cliente = :id_cliente";
+    // CORREÇÃO: Removemos o LEFT JOIN com a coluna antiga 'u.id_unidade'
+    $sql = "SELECT * FROM usuarios_sistema 
+            WHERE id_usuario = :id 
+            AND id_cliente = :id_cliente";
+    
     $stmt = $conn->prepare($sql);
     $stmt->execute([
         ':id' => $id,
@@ -89,9 +89,16 @@ try {
         redirect('listar_usuarios.php');
     }
 
-    // Verificar permissão: gerente só pode aprovar usuários da sua unidade
+    // CORREÇÃO: Verificar permissão do gerente usando a tabela usuarios_unidades
     if ($tipo_usuario === 'gerente') {
-        if ($usuario['id_unidade'] != $id_unidade_usuario) {
+        $stmtUnidade = $conn->prepare("SELECT COUNT(*) FROM usuarios_unidades WHERE id_usuario = :id_usuario AND id_unidade = :id_unidade");
+        $stmtUnidade->execute([
+            ':id_usuario' => $id,
+            ':id_unidade' => $id_unidade_usuario
+        ]);
+        
+        // Se retornar 0, o usuário não é da unidade do gerente
+        if ($stmtUnidade->fetchColumn() == 0) {
             setMessage('error', 'Você não tem permissão para aprovar este usuário.');
             redirect('listar_usuarios.php');
         }
@@ -99,7 +106,7 @@ try {
 
     // Verificar se já está ativo
     if ($usuario['status_usuario'] === 'ativo') {
-        setMessage('warning', 'Este usuário já está ativo.');
+        setMessage('error', 'Este usuário já está ativo.'); // Mudei para error para aparecer na tela de listagem
         redirect('listar_usuarios.php');
     }
 
