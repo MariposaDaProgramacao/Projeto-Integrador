@@ -125,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($checkUnidade->fetchColumn() == 0) {
                     $erro = 'Unidade inválida ou não pertence à sua organização.';
                 } else {
-                    // Gerar senha provisória
+                    // Gerar senha provisória (função vem de conexao_banco.php)
                     $senha_provisoria = gerarSenhaProvisoria();
                     $senha_hash = password_hash($senha_provisoria, PASSWORD_DEFAULT);
 
@@ -226,53 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ============================================================
-// 7. FUNÇÃO PARA GERAR SENHA PROVISÓRIA
-// ============================================================
-
-function gerarSenhaProvisoria($tamanho = 8) {
-    $caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    $senha = '';
-    for ($i = 0; $i < $tamanho; $i++) {
-        $senha .= $caracteres[random_int(0, strlen($caracteres) - 1)];
-    }
-    return $senha;
-}
-
-// ============================================================
-// 8. FUNÇÃO PARA BUSCAR NOME DA UNIDADE
-// ============================================================
-
-function buscarNomeUnidade($conn, $id_unidade, $id_cliente) {
-    try {
-        $stmt = $conn->prepare("SELECT nome_unidade FROM unidades WHERE id_unidade = :id AND id_cliente = :id_cliente");
-        $stmt->execute([
-            ':id' => $id_unidade,
-            ':id_cliente' => $id_cliente
-        ]);
-        $nome = $stmt->fetchColumn();
-        return $nome ?: 'Unidade não definida';
-    } catch (PDOException $e) {
-        return 'Unidade não definida';
-    }
-}
-
-// ============================================================
-// 9. FUNÇÃO PARA FORMATAR TELEFONE
-// ============================================================
-
-function formatarTelefone($telefone) {
-    if (empty($telefone)) return '';
-    $telefone = preg_replace('/\D/', '', $telefone);
-    if (strlen($telefone) === 11) {
-        return '(' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 5) . '-' . substr($telefone, 7);
-    } elseif (strlen($telefone) === 10) {
-        return '(' . substr($telefone, 0, 2) . ') ' . substr($telefone, 2, 4) . '-' . substr($telefone, 6);
-    }
-    return $telefone;
-}
-
-// ============================================================
-// 10. TÍTULO DA PÁGINA
+// 7. TÍTULO DA PÁGINA
 // ============================================================
 
 $titulo = 'Cadastrar Usuário - Gerenciamento de Ambientes';
